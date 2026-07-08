@@ -1,32 +1,85 @@
-import React from "react";
-import { HomeHeader, Utinities, ListOA, NewsSection } from "@components";
-import PageLayout from "@components/layout/PageLayout";
-import { APP_UTINITIES } from "@constants/utinities";
-import { useStore } from "@store";
-import Contacts from "./Contacts";
-import Procedures from "./Procedures";
+import React, { useEffect, useState } from "react";
+import { Box, Text, useNavigate } from "zmp-ui";
+import { HomeHeader, AppBottomNav, PageLayout } from "@components/layout";
+import { Utinities, VerticalUtinities } from "@components/utilities";
+import { APP_UTINITIES, CONTACTS } from "@constants/utinities";
+import { fetchPublicAnnouncements } from "@service/announcementApi";
+import { LOAI_THONG_BAO_LABEL } from "@constants/domain";
+import { Announcement } from "@dts";
 
 const HomePage: React.FunctionComponent = () => {
-    const [organization] = useStore(state => [
-        state.organization,
-        state.getOrganization,
-    ]);
+    const navigate = useNavigate();
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchPublicAnnouncements(1, 3)
+            .then(res => setAnnouncements(res.items))
+            .catch(() => setAnnouncements([]))
+            .finally(() => setLoading(false));
+    }, []);
 
     return (
         <PageLayout
             id="home-page"
             customHeader={
                 <HomeHeader
-                    title="DỊCH VỤ CÔNG"
-                    name={organization?.name || ""}
+                    title="Tổ dân phố Hòa Bình"
+                    name="Phường Dương Nội, Hà Nội"
                 />
             }
+            bottomNav={<AppBottomNav />}
         >
             <Utinities utinities={APP_UTINITIES} />
-            <ListOA />
-            <Contacts />
-            <Procedures />
-            <NewsSection />
+
+            <Box className="bg-white mt-2 p-4">
+                <Box
+                    flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={2}
+                >
+                    <Text.Title size="small">Thông báo mới nhất</Text.Title>
+                    <Text
+                        size="xSmall"
+                        className="text-main"
+                        onClick={() =>
+                            navigate("/announcements", { animate: true })
+                        }
+                    >
+                        Xem tất cả
+                    </Text>
+                </Box>
+
+                {!loading && announcements.length === 0 && (
+                    <Text size="xSmall" className="text-text_2">
+                        Chưa có thông báo nào.
+                    </Text>
+                )}
+
+                {announcements.map(item => (
+                    <Box
+                        key={item._id}
+                        py={2}
+                        className="border-b border-divider_01 last:border-0"
+                        onClick={() =>
+                            navigate(`/announcements/${item._id}`, {
+                                animate: true,
+                            })
+                        }
+                    >
+                        <Text size="small" className="font-medium">
+                            {item.pinned ? "📌 " : ""}
+                            {item.title}
+                        </Text>
+                        <Text size="xxSmall" className="text-text_2">
+                            {LOAI_THONG_BAO_LABEL[item.category]}
+                        </Text>
+                    </Box>
+                ))}
+            </Box>
+
+            <VerticalUtinities title="Liên hệ nhanh" utinities={CONTACTS} />
         </PageLayout>
     );
 };

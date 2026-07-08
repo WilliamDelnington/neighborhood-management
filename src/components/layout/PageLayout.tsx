@@ -13,6 +13,7 @@ interface PropsType extends PageProps {
     restoreScroll?: boolean;
     restoreScrollBackOnly?: boolean;
     bg?: string;
+    bottomNav?: ReactNode;
 }
 
 const StyledPage = styled(Page)`
@@ -36,6 +37,7 @@ const PageLayout = React.forwardRef<HTMLDivElement, PropsType>((props, ref) => {
         restoreScrollBackOnly = true,
         restoreScroll,
         bg,
+        bottomNav,
         ...rest
     } = props;
     const pageRef = useRef<HTMLDivElement>(null);
@@ -49,9 +51,11 @@ const PageLayout = React.forwardRef<HTMLDivElement, PropsType>((props, ref) => {
             restoreScrollOnBack={restoreScrollBackOnly}
             ref={pageRef}
             $bg={bg}
+            style={bottomNav ? { paddingBottom: 64 } : undefined}
         >
             {customHeader || <DefaultHeader title={title} back />}
             {children}
+            {bottomNav}
         </StyledPage>
     );
 });

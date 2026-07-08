@@ -1,0 +1,309 @@
+import React, { useEffect, useState } from "react";
+import { Box, Icon, Text, useNavigate, useSnackbar, Switch } from "zmp-ui";
+import { PageLayout, AppBottomNav } from "@components/layout";
+import { Button, Input } from "@components/customized";
+import { RequireAuth } from "@components/role";
+import { useStore } from "@store";
+import { updateMyProfile, logout as logoutApi } from "@service/authApi";
+import { fetchUnreadNotificationCount } from "@service/notificationApi";
+import { requestNotificationPermission } from "@service/zalo";
+import { ROLE_LABEL } from "@constants/domain";
+
+const AccountPage: React.FC = () => (
+    <RequireAuth>
+        <AccountPageContent />
+    </RequireAuth>
+);
+
+const AccountPageContent: React.FC = () => {
+    const navigate = useNavigate();
+    const { openSnackbar } = useSnackbar();
+    const [user, setUser, logout] = useStore(state => [
+        state.user,
+        state.setUser,
+        state.logout,
+    ]);
+
+    const [editing, setEditing] = useState(false);
+    const [displayName, setDisplayName] = useState(user?.displayName || "");
+    const [phone, setPhone] = useState(user?.phone || "");
+    const [address, setAddress] = useState(user?.address || "");
+    const [saving, setSaving] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        fetchUnreadNotificationCount()
+            .then(res => setUnreadCount(res.count))
+            .catch(() => setUnreadCount(0));
+    }, []);
+
+    if (!user) return null;
+
+    const handleSave = async () => {
+        try {
+            setSaving(true);
+            const updated = await updateMyProfile({
+                displayName,
+                phone,
+                address,
+            });
+            setUser(updated);
+            setEditing(false);
+            openSnackbar({ type: "success", text: "Đã cập nhật tài khoản" });
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Có lỗi xảy ra",
+            });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleToggleNotification = async (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const { checked } = e.target;
+        if (checked) {
+            const granted = await requestNotificationPermission();
+            if (!granted) {
+                openSnackbar({
+                    type: "error",
+                    text: "Bạn chưa cấp quyền thông báo",
+                });
+                return;
+            }
+        }
+        try {
+            const updated = await updateMyProfile({
+                notificationPermission: checked,
+            });
+            setUser(updated);
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Có lỗi xảy ra",
+            });
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logoutApi();
+        } catch {
+            // Bo qua loi mang - van xoa session cuc bo
+        }
+        logout();
+        navigate("/login", { animate: true });
+    };
+
+    return (
+        <PageLayout
+            id="account-page"
+            title="Tài khoản"
+            bottomNav={<AppBottomNav />}
+        >
+            <Box p={4}>
+                <Box
+                    className="bg-white rounded-2xl p-4 shadow-sm"
+                    flex
+                    flexDirection="column"
+                    alignItems="center"
+                >
+                    {user.avatarUrl ? (
+                        <img
+                            src={user.avatarUrl}
+                            alt={user.displayName}
+                            style={{
+                                width: 72,
+                                height: 72,
+                                borderRadius: "50%",
+                            }}
+                        />
+                    ) : (
+                        <Box
+                            className="bg-blue_10 text-main"
+                            style={{
+                                width: 72,
+                                height: 72,
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 28,
+                                fontWeight: 600,
+                            }}
+                        >
+                            {user.displayName?.charAt(0)?.toUpperCase() || "?"}
+                        </Box>
+                    )}
+                    <Text.Title size="small" className="mt-2">
+                        {user.displayName}
+                    </Text.Title>
+                    <Text size="xSmall" className="text-main">
+                        {ROLE_LABEL[user.primaryRole]}
+                    </Text>
+                </Box>
+
+                <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
+                    <Box
+                        flex
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={2}
+                    >
+                        <Text.Title size="small">Thông tin cá nhân</Text.Title>
+                        {!editing && (
+                            <Text
+                                size="xSmall"
+                                className="text-main"
+                                onClick={() => setEditing(true)}
+                            >
+                                Chỉnh sửa
+                            </Text>
+                        )}
+                    </Box>
+
+                    {editing ? (
+                        <>
+                            <Input
+                                label="Họ tên"
+                                value={displayName}
+                                onChange={e => setDisplayName(e.target.value)}
+                            />
+                            <Box mt={3}>
+                                <Input
+                                    label="Số điện thoại"
+                                    value={phone}
+                                    onChange={e => setPhone(e.target.value)}
+                                />
+                            </Box>
+                            <Box mt={3}>
+                                <Input
+                                    label="Địa chỉ"
+                                    value={address}
+                                    onChange={e => setAddress(e.target.value)}
+                                />
+                            </Box>
+                            <Box mt={4} flex style={{ gap: 8 }}>
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    onClick={() => setEditing(false)}
+                                >
+                                    Hủy
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    loading={saving}
+                                    onClick={handleSave}
+                                >
+                                    Lưu
+                                </Button>
+                            </Box>
+                        </>
+                    ) : (
+                        <>
+                            <InfoRow
+                                label="Số điện thoại"
+                                value={user.phone || "Chưa cập nhật"}
+                            />
+                            <InfoRow
+                                label="Địa chỉ"
+                                value={user.address || "Chưa cập nhật"}
+                            />
+                            <InfoRow
+                                label="Hộ khẩu liên kết"
+                                value={
+                                    user.householdId
+                                        ? "Đã liên kết"
+                                        : "Chưa liên kết"
+                                }
+                            />
+                        </>
+                    )}
+                </Box>
+
+                <Box
+                    className="bg-white rounded-2xl p-4 shadow-sm mt-3"
+                    flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    onClick={() =>
+                        navigate("/notifications", { animate: true })
+                    }
+                >
+                    <Text.Title size="small">Thông báo của tôi</Text.Title>
+                    <Box flex alignItems="center" style={{ gap: 8 }}>
+                        {unreadCount > 0 && (
+                            <Box
+                                className="bg-red-500 text-white"
+                                style={{
+                                    minWidth: 20,
+                                    height: 20,
+                                    borderRadius: 10,
+                                    fontSize: 11,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0 6px",
+                                }}
+                            >
+                                {unreadCount > 99 ? "99+" : unreadCount}
+                            </Box>
+                        )}
+                        <Icon icon="zi-chevron-right" className="text-text_3" />
+                    </Box>
+                </Box>
+
+                <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
+                    <Box
+                        flex
+                        justifyContent="space-between"
+                        alignItems="center"
+                    >
+                        <Box>
+                            <Text.Title size="small">Nhận thông báo</Text.Title>
+                            <Text size="xxSmall" className="text-text_2">
+                                Thông báo họp dân, phản ánh, khảo sát mới
+                            </Text>
+                        </Box>
+                        <Switch
+                            checked={user.notificationPermission}
+                            onChange={handleToggleNotification}
+                        />
+                    </Box>
+                </Box>
+
+                <Box mt={4}>
+                    <Button
+                        variant="secondary"
+                        fullWidth
+                        onClick={handleLogout}
+                    >
+                        Đăng xuất
+                    </Button>
+                </Box>
+            </Box>
+        </PageLayout>
+    );
+};
+
+const InfoRow: React.FC<{ label: string; value: string }> = ({
+    label,
+    value,
+}) => (
+    <Box
+        flex
+        justifyContent="space-between"
+        py={2}
+        className="border-b border-divider_01 last:border-0"
+    >
+        <Text size="xSmall" className="text-text_2">
+            {label}
+        </Text>
+        <Text size="xSmall">{value}</Text>
+    </Box>
+);
+
+export default AccountPage;

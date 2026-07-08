@@ -1,59 +1,82 @@
 import { User } from "@dts";
-import { getToken, getZaloUserInfo } from "@service/zalo";
 import { StateCreator } from "zustand";
+import { getToken, getZaloUserInfo, authorizeUserInfo } from "@service/zalo";
+import { loginWithZalo, fetchMe } from "@service/authApi";
 
 export interface AuthSlice {
     token?: string;
     user?: User;
-    loadingToken: boolean;
-    loadingUserInfo: boolean;
-    setToken: (token: string) => void;
-    getToken: () => string | undefined;
-    getUser: () => User | undefined;
-    setUser: (user: User) => void;
-    setLoading: (loading: boolean) => void;
-    getUserInfo: () => Promise<void>;
-    getAccessToken: () => Promise<void>;
+    bootstrapping: boolean;
+    bootstrapError?: string;
+    setToken: (token?: string) => void;
+    setUser: (user?: User) => void;
+    /**
+     * Dang nhap bang Zalo: xin quyen -> lay accessToken + thong tin ho so ->
+     * doi lay session token cua backend -> luu ca hai vao store.
+     */
+    bootstrapSession: () => Promise<void>;
+    refreshMe: () => Promise<void>;
+    logout: () => void;
 }
 
 const authSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set, get) => ({
-    token: "",
+    token: undefined,
     user: undefined,
-    loadingToken: false,
-    loadingUserInfo: false,
-    setToken: (token: string) => {
-        set(state => ({ ...state, token }));
-    },
-    getToken: () => get().token,
-    getUser: () => get().user,
-    setUser: (user: User) => {
-        set(state => ({ ...state, user }));
-    },
-    setLoading: (loading: boolean) => {
-        set(state => ({ ...state, loading }));
-    },
-    getUserInfo: async () => {
+    bootstrapping: false,
+    bootstrapError: undefined,
+    setToken: (token?: string) => set(state => ({ ...state, token })),
+    setUser: (user?: User) => set(state => ({ ...state, user })),
+    bootstrapSession: async () => {
+        if (get().bootstrapping) return;
+        set(state => ({
+            ...state,
+            bootstrapping: true,
+            bootstrapError: undefined,
+        }));
         try {
-            set(state => ({ ...state, loadingUserInfo: true }));
-            const user = await getZaloUserInfo();
+            const accessToken = await getToken();
+            await authorizeUserInfo();
 
-            set(state => ({ ...state, user }));
-        } catch (err) {
-            console.log("ERR: ", err);
+            let zaloUserId = "";
+            let name: string | undefined;
+            let avatarUrl: string | undefined;
+            try {
+                const info = await getZaloUserInfo();
+                zaloUserId = info.id;
+                name = info.name;
+                avatarUrl = info.avatar;
+            } catch {
+                // Nguoi dung tu choi quyen ho so - van cho phep dang nhap voi ID toi thieu
+                zaloUserId = `sandbox-${accessToken}`;
+            }
+
+            const { token, user } = await loginWithZalo({
+                accessToken,
+                zaloUserId,
+                name,
+                avatarUrl,
+            });
+
+            set(state => ({ ...state, token, user }));
+        } catch (err: any) {
+            set(state => ({
+                ...state,
+                bootstrapError: err?.message || "Không thể đăng nhập Zalo",
+            }));
         } finally {
-            set(state => ({ ...state, loadingUserInfo: false }));
+            set(state => ({ ...state, bootstrapping: false }));
         }
     },
-    getAccessToken: async () => {
+    refreshMe: async () => {
         try {
-            set(state => ({ ...state, loadingToken: true }));
-            const token = await getToken();
-            set(state => ({ ...state, token }));
-        } catch (err) {
-            console.log("ERR: ", err);
-        } finally {
-            set(state => ({ ...state, loadingToken: false }));
+            const user = await fetchMe();
+            set(state => ({ ...state, user }));
+        } catch {
+            // Token het han - request.ts da tu xoa token, khong can xu ly them
         }
+    },
+    logout: () => {
+        set(state => ({ ...state, token: undefined, user: undefined }));
     },
 });
 

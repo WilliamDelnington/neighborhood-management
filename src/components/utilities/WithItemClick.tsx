@@ -4,7 +4,7 @@ import { openWebView } from "@service/zalo";
 import { useSnackbar, useNavigate } from "zmp-ui";
 
 function WithItemClick<T>(Component: ComponentType<T & object>) {
-    return (props: T) => {
+    return function WithItemClickWrapper(props: T) {
         const navigate = useNavigate();
         const { openSnackbar } = useSnackbar();
 
@@ -30,21 +30,9 @@ function WithItemClick<T>(Component: ComponentType<T & object>) {
             } else if (path) {
                 navigate(path, { animate: true, direction: "forward" });
             } else if (phoneNumber) {
-                openPhone({
-                    phoneNumber,
-                    success: () => {
-                        console.log("");
-                    },
-                    fail: error => {
-                        console.log(error);
-                    },
-                });
+                openPhone({ phoneNumber });
             } else if (link) {
-                try {
-                    openWebView(link);
-                } catch (err) {
-                    console.log("ERR: ", err);
-                }
+                openWebView(link);
             }
         };
         return <Component {...props} handleClickUtinity={handleClickUtinity} />;

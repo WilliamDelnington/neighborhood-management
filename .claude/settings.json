@@ -1,0 +1,11 @@
+{
+    "permissions": {
+        "allow": [
+            "Bash(echo \"EXIT:$?\")",
+            "Bash(npm run *)",
+            "Bash(echo \"TSC_EXIT:$?\")",
+            "Bash(node -e ' *)",
+            "Bash(npx zmp *)"
+        ]
+    }
+}

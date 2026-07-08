@@ -3,8 +3,6 @@ import { Box } from "zmp-ui";
 import styled from "styled-components";
 import tw from "twin.macro";
 import Logo from "@assets/logo.png";
-import TextItemSkeleton from "@components/skeleton/TextSketeton";
-import { useStore } from "@store";
 import Background from "@assets/header-background.png";
 
 export interface HomeHeaderProps {
@@ -18,8 +16,8 @@ const HeaderContainer = styled.div`
     z-index: 1;
     background: linear-gradient(
             0deg,
-            rgba(4, 109, 214, 0.9),
-            rgba(4, 109, 214, 0.9)
+            rgba(37, 99, 235, 0.92),
+            rgba(37, 99, 235, 0.92)
         ),
         url(${Background});
     background-size: cover;
@@ -27,7 +25,7 @@ const HeaderContainer = styled.div`
 `;
 
 const Title = styled.div`
-    ${tw`text-base font-medium`}
+    ${tw`text-base font-semibold`}
 `;
 
 const LogoWrapper = styled.div`
@@ -41,9 +39,9 @@ const StyledText = styled.div`
     ${tw`text-wth_a70 text-xs`}
     min-height: 16px;
 `;
+
 const HomeHeader: FC<HomeHeaderProps> = props => {
     const { title, name } = props;
-    const loading = useStore(state => state.gettingOrganization);
     return (
         <HeaderContainer>
             <LogoWrapper>
@@ -51,15 +49,7 @@ const HomeHeader: FC<HomeHeaderProps> = props => {
             </LogoWrapper>
             <Box flex flexDirection="column">
                 <Title>{title}</Title>
-                {loading ? (
-                    <TextItemSkeleton
-                        color="rgba(255,255,255,0.2)"
-                        height={16}
-                        width={180}
-                    />
-                ) : (
-                    <StyledText>{name}</StyledText>
-                )}
+                <StyledText>{name}</StyledText>
             </Box>
         </HeaderContainer>
     );

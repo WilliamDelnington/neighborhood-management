@@ -1,97 +1,80 @@
 import * as Icon from "@components/icons";
 import { Utinity } from "@dts";
-import SocialInsuranceLogo from "@assets/logo-social-insurance.png";
-import Youtube from "@assets/youtube.png";
-import Location from "@assets/location.png";
-import Identification from "@assets/id-card.png";
-import InternalPhone from "@assets/internal-phone.png";
-import SocialInsurranceNumber from "@assets/social-insurance-number.png";
-import Benefit from "@assets/benefits.png";
-import Renew from "@assets/files.png";
 
 export const APP_UTINITIES: Array<Utinity> = [
     {
-        key: "create-schedule-appointment",
-        label: "Đặt lịch làm việc",
-        icon: Icon.CalendarIcon,
-        path: "/create-schedule-appointment",
-    },
-    {
-        key: "info",
-        label: "Thông tin - hướng dẫn",
-        icon: Icon.BookIcon,
-        path: "/information-guide",
-    },
-    {
-        key: "feedback",
-        label: "Góp ý - phản ánh",
+        key: "create-complaint",
+        label: "Gửi phản ánh",
         icon: Icon.PenIcon,
-        path: "/feedbacks",
+        path: "/complaints/create",
     },
     {
-        key: "goverment",
-        label: "Cổng dịch vụ công quốc gia",
-        icon: Icon.GlobeIcon,
-        link: "https://dichvucong.gov.vn/",
-    },
-    {
-        key: "file-search",
-        label: "Tra cứu hồ sơ",
+        key: "lookup-complaint",
+        label: "Tra cứu phản ánh",
         icon: Icon.SearchIcon,
-        path: "/search",
+        path: "/complaints/lookup",
+    },
+    {
+        key: "announcements",
+        label: "Xem thông báo",
+        icon: Icon.NotificationIcon,
+        path: "/announcements",
+    },
+    {
+        key: "meetings",
+        label: "Lịch họp",
+        icon: Icon.CalendarIcon,
+        path: "/meetings",
+    },
+    {
+        key: "surveys",
+        label: "Khảo sát",
+        icon: Icon.QAndAIcon,
+        path: "/surveys",
+    },
+    {
+        key: "files",
+        label: "Biểu mẫu",
+        icon: Icon.BookIcon,
+        path: "/files",
+    },
+    {
+        key: "emergency",
+        label: "Liên hệ khẩn cấp",
+        icon: Icon.HeadsetIcon,
+        path: "/emergency",
     },
 ];
 
 export const CONTACTS: Array<Utinity> = [
     {
-        key: "social-insurance",
-        label: "BHXH TP Thủ Đức",
-        link: "",
-        iconSrc: SocialInsuranceLogo,
+        key: "police-113",
+        label: "Công an (113)",
+        icon: Icon.HeadphoneIcon,
+        phoneNumber: "113",
     },
     {
-        key: "si-number",
-        label: "Số tài khoản Thu BHXH",
-        link: "",
-        iconSrc: SocialInsurranceNumber,
+        key: "fire-114",
+        label: "Phòng cháy chữa cháy (114)",
+        icon: Icon.HeadphoneIcon,
+        phoneNumber: "114",
     },
     {
-        key: "internal-number",
-        label: "Số nội bộ tổ nghiệp vụ",
-        link: "",
-        iconSrc: InternalPhone,
+        key: "ambulance-115",
+        label: "Cấp cứu y tế (115)",
+        icon: Icon.HeadphoneIcon,
+        phoneNumber: "115",
     },
     {
-        key: "department",
-        label: "Điểm thu BHXH, BHYT",
-        link: "",
-        iconSrc: Location,
+        key: "regional-police",
+        label: "Công an khu vực phường Dương Nội",
+        icon: Icon.PersonalIcon,
+        phoneNumber: "",
     },
     {
-        key: "update-identification",
-        label: "Cập nhật Mã định danh / CCCD",
-        link: "",
-        iconSrc: Identification,
-    },
-    {
-        key: "youtube",
-        label: "Youtube",
-        link: "",
-        iconSrc: Youtube,
-    },
-];
-
-export const PROCEDURES: Array<Utinity> = [
-    {
-        key: "renew",
-        label: "Gia hạn thẻ BHYT trực tuyến",
-        link: "",
-        iconSrc: Renew,
-    },
-    {
-        key: "benefit",
-        label: "Các chế độ BHXH",
-        link: "",
-        iconSrc: Benefit,
+        key: "neighborhood-leader",
+        label: "Tổ trưởng Tổ dân phố Hòa Bình",
+        icon: Icon.EnterpriseIcon,
+        phoneNumber: "",
     },
 ];
