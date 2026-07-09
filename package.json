@@ -32,8 +32,7 @@
         ],
         "src/**/*.{json,css,scss,html,md}": "prettier --write",
         "./*.{js,jsx,ts,tsx,json,css,scss,html,md}": "prettier --write",
-        ".claude/**/*.json": "prettier --write",
-        "backend-app/**/*.{js,jsx,ts,tsx,json,css,scss,html,md}": "prettier --write"
+        ".claude/**/*.json": "prettier --write"
     },
     "husky": {
         "hooks": {

@@ -173,13 +173,13 @@ Use this target structure unless the existing template strongly requires a small
 └── docs
 ```
 
-If using a Next.js backend/admin project instead of `backend/`, keep the same boundaries under:
+The backend is a separate Next.js project living as a sibling folder, `../quan-ly-to-dan-pho-hoa-binh-backend-app`, not nested inside this repo. It keeps the same boundaries under:
 
 ```text
-backend-app/src/app/api
-backend-app/src/models
-backend-app/src/services
-backend-app/src/lib
+../quan-ly-to-dan-pho-hoa-binh-backend-app/src/app/api
+../quan-ly-to-dan-pho-hoa-binh-backend-app/src/models
+../quan-ly-to-dan-pho-hoa-binh-backend-app/src/services
+../quan-ly-to-dan-pho-hoa-binh-backend-app/src/lib
 ```
 
 ## General UI Design
