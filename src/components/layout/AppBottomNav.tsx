@@ -19,6 +19,7 @@ const AppBottomNav: React.FC = () => {
         if (pathname === "/") return "home";
         if (pathname.startsWith("/announcements")) return "announcements";
         if (pathname.startsWith("/admin")) return "admin";
+        if (pathname.startsWith("/complaints")) return "complaints";
         if (pathname.startsWith("/account")) return "account";
         return "home";
     })();

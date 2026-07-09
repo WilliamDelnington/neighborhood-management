@@ -31,7 +31,12 @@ export async function request<T>(
         headers.append("Authorization", `Bearer ${token}`);
     }
 
-    const requestUrl = new URL(url, baseUrl);
+    // VITE_BASE_URL co the de trong khi frontend va backend cung goc (hoac chua cau hinh) -
+    // trong truong hop do dung URL tuong doi de trinh duyet/webview tu resolve theo origin
+    // hien tai, tranh nem loi "Invalid URL" khi goi new URL(url, "").
+    const requestUrl = baseUrl
+        ? new URL(url, baseUrl)
+        : new URL(url, window.location.origin);
     const requestOptions: { [key: string]: any } = {
         method,
         headers,
