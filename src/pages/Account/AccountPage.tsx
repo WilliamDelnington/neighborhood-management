@@ -4,7 +4,11 @@ import { PageLayout, AppBottomNav } from "@components/layout";
 import { Button, Input } from "@components/customized";
 import { RequireAuth } from "@components/role";
 import { useStore } from "@store";
-import { updateMyProfile, logout as logoutApi } from "@service/authApi";
+import {
+    updateMyProfile,
+    setPassword as setPasswordApi,
+    logout as logoutApi,
+} from "@service/authApi";
 import { fetchUnreadNotificationCount } from "@service/notificationApi";
 import { requestNotificationPermission } from "@service/zalo";
 import { ROLE_LABEL } from "@constants/domain";
@@ -30,6 +34,11 @@ const AccountPageContent: React.FC = () => {
     const [address, setAddress] = useState(user?.address || "");
     const [saving, setSaving] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    const [changingPassword, setChangingPassword] = useState(false);
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [settingPassword, setSettingPassword] = useState(false);
 
     useEffect(() => {
         fetchUnreadNotificationCount()
@@ -84,6 +93,41 @@ const AccountPageContent: React.FC = () => {
                 type: "error",
                 text: err?.message || "Có lỗi xảy ra",
             });
+        }
+    };
+
+    const handleSetPassword = async () => {
+        if (newPassword.length < 6) {
+            openSnackbar({
+                type: "error",
+                text: "Mật khẩu phải có ít nhất 6 ký tự",
+            });
+            return;
+        }
+        if (newPassword !== confirmNewPassword) {
+            openSnackbar({
+                type: "error",
+                text: "Mật khẩu nhập lại không khớp",
+            });
+            return;
+        }
+        try {
+            setSettingPassword(true);
+            await setPasswordApi(newPassword);
+            setNewPassword("");
+            setConfirmNewPassword("");
+            setChangingPassword(false);
+            openSnackbar({
+                type: "success",
+                text: "Đã đặt mật khẩu đăng nhập",
+            });
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Có lỗi xảy ra",
+            });
+        } finally {
+            setSettingPassword(false);
         }
     };
 
@@ -220,6 +264,78 @@ const AccountPageContent: React.FC = () => {
                                         : "Chưa liên kết"
                                 }
                             />
+                        </>
+                    )}
+                </Box>
+
+                <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
+                    <Box
+                        flex
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={changingPassword ? 2 : 0}
+                    >
+                        <Box>
+                            <Text.Title size="small">Bảo mật</Text.Title>
+                            <Text size="xxSmall" className="text-text_2">
+                                {user.phone
+                                    ? "Đăng nhập bằng số điện thoại + mật khẩu"
+                                    : "Đặt mật khẩu để có thể đăng nhập bằng số điện thoại"}
+                            </Text>
+                        </Box>
+                        {!changingPassword && (
+                            <Text
+                                size="xSmall"
+                                className="text-main"
+                                onClick={() => setChangingPassword(true)}
+                            >
+                                Đặt mật khẩu
+                            </Text>
+                        )}
+                    </Box>
+
+                    {changingPassword && (
+                        <>
+                            <Box mt={3}>
+                                <Input
+                                    type="password"
+                                    label="Mật khẩu mới"
+                                    value={newPassword}
+                                    onChange={e =>
+                                        setNewPassword(e.target.value)
+                                    }
+                                />
+                            </Box>
+                            <Box mt={3}>
+                                <Input
+                                    type="password"
+                                    label="Nhập lại mật khẩu mới"
+                                    value={confirmNewPassword}
+                                    onChange={e =>
+                                        setConfirmNewPassword(e.target.value)
+                                    }
+                                />
+                            </Box>
+                            <Box mt={4} flex style={{ gap: 8 }}>
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    onClick={() => {
+                                        setChangingPassword(false);
+                                        setNewPassword("");
+                                        setConfirmNewPassword("");
+                                    }}
+                                >
+                                    Hủy
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    loading={settingPassword}
+                                    onClick={handleSetPassword}
+                                >
+                                    Lưu
+                                </Button>
+                            </Box>
                         </>
                     )}
                 </Box>

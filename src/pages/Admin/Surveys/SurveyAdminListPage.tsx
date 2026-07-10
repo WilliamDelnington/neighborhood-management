@@ -11,6 +11,7 @@ import {
     BadgeTone,
 } from "@components/admin";
 import { Button } from "@components/customized";
+import { useStore } from "@store";
 import { fetchSurveys, openSurvey, closeSurvey } from "@service/surveyApi";
 import { Survey } from "@dts";
 
@@ -30,7 +31,7 @@ const SURVEY_STATUS_TONE: Record<Survey["status"], BadgeTone> = {
 };
 
 const SurveyAdminListPage: React.FC = () => (
-    <AdminGuard roles={["admin", "secretary"]}>
+    <AdminGuard roles={["admin", "secretary", "neighborhood_leader"]}>
         <PageLayout
             id="admin-surveys"
             title="Quản lý khảo sát"
@@ -44,6 +45,10 @@ const SurveyAdminListPage: React.FC = () => (
 const SurveyAdminListContent: React.FC = () => {
     const navigate = useNavigate();
     const { openSnackbar } = useSnackbar();
+    const user = useStore(state => state.user);
+    const canManage =
+        !!user &&
+        (user.roles.includes("admin") || user.roles.includes("secretary"));
     const [surveys, setSurveys] = useState<Survey[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -92,15 +97,19 @@ const SurveyAdminListContent: React.FC = () => {
                 <Text.Title size="small">
                     Khảo sát {total > 0 ? `(${total})` : ""}
                 </Text.Title>
-                <Button
-                    size="small"
-                    prefixIcon={<Icon icon="zi-plus" />}
-                    onClick={() =>
-                        navigate("/admin/surveys/create", { animate: true })
-                    }
-                >
-                    Thêm mới
-                </Button>
+                {canManage && (
+                    <Button
+                        size="small"
+                        prefixIcon={<Icon icon="zi-plus" />}
+                        onClick={() =>
+                            navigate("/admin/surveys/create", {
+                                animate: true,
+                            })
+                        }
+                    >
+                        Thêm mới
+                    </Button>
+                )}
             </Box>
 
             {loading && <LoadingState />}
@@ -139,7 +148,7 @@ const SurveyAdminListContent: React.FC = () => {
                                     >
                                         Kết quả
                                     </Button>
-                                    {s.status !== "da_dong" && (
+                                    {canManage && s.status !== "da_dong" && (
                                         <Button
                                             size="small"
                                             loading={actingId === s._id}
@@ -156,10 +165,14 @@ const SurveyAdminListContent: React.FC = () => {
                                     />
                                 </Box>
                             }
-                            onClick={() =>
-                                navigate(`/admin/surveys/${s._id}/edit`, {
-                                    animate: true,
-                                })
+                            onClick={
+                                canManage
+                                    ? () =>
+                                          navigate(
+                                              `/admin/surveys/${s._id}/edit`,
+                                              { animate: true },
+                                          )
+                                    : undefined
                             }
                         />
                     ))}

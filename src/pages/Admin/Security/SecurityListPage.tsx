@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, Icon, Modal, Select, Sheet, useSnackbar } from "zmp-ui";
+import { useLocation } from "react-router-dom";
 import { PageLayout, AppBottomNav } from "@components/layout";
 import {
     AdminGuard,
@@ -69,6 +70,7 @@ const SecurityListPage: React.FC = () => (
 
 const SecurityListContent: React.FC = () => {
     const { openSnackbar } = useSnackbar();
+    const location = useLocation();
     const user = useStore(state => state.user);
     const canManage =
         !!user &&
@@ -76,7 +78,11 @@ const SecurityListContent: React.FC = () => {
             user.roles.includes("neighborhood_leader") ||
             user.roles.includes("regional_police"));
 
-    const [level, setLevel] = useState<MucDoAnNinh | "">("");
+    const [level, setLevel] = useState<MucDoAnNinh | "">(
+        (new URLSearchParams(location.search).get(
+            "level",
+        ) as MucDoAnNinh | null) || "",
+    );
     const [items, setItems] = useState<SecurityRecord[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -222,7 +228,9 @@ const SecurityListContent: React.FC = () => {
                                         tone={LEVEL_TONE[r.level]}
                                     />
                                 }
-                                onClick={() => openEdit(r)}
+                                onClick={
+                                    canManage ? () => openEdit(r) : undefined
+                                }
                             />
                         ))}
                 </Box>

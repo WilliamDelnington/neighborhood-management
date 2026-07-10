@@ -4,10 +4,14 @@ export const MINI_APP_ID =
 
 export const API = {
     AUTH_ZALO_LOGIN: "/api/auth/zalo/login",
+    AUTH_REGISTER: "/api/auth/register",
+    AUTH_LOGIN: "/api/auth/login",
+    AUTH_SET_PASSWORD: "/api/auth/set-password",
     AUTH_ME: "/api/auth/me",
     AUTH_LOGOUT: "/api/auth/logout",
 
     USERS: "/api/users",
+    USERS_ASSIGNABLE_STAFF: "/api/users/assignable-staff",
     ROLES: "/api/roles",
 
     HOUSEHOLDS: "/api/households",

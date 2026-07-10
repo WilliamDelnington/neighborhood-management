@@ -38,12 +38,16 @@ export const APP_UTINITIES: Array<Utinity> = [
         icon: Icon.BookIcon,
         path: "/files",
     },
-    {
-        key: "emergency",
-        label: "Liên hệ khẩn cấp",
-        icon: Icon.HeadsetIcon,
-        path: "/emergency",
-    },
+];
+
+export const EMERGENCY_HOTLINES: Array<{
+    key: string;
+    label: string;
+    phoneNumber: string;
+}> = [
+    { key: "police", label: "Công an", phoneNumber: "113" },
+    { key: "fire", label: "Cứu hỏa", phoneNumber: "114" },
+    { key: "ambulance", label: "Cấp cứu", phoneNumber: "115" },
 ];
 
 export const CONTACTS: Array<Utinity> = [

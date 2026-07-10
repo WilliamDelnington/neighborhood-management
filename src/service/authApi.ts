@@ -24,6 +24,34 @@ export const loginWithZalo = (
 
 export const fetchMe = (): Promise<User> => request<User>("GET", API.AUTH_ME);
 
+export interface PhoneRegisterParams {
+    phone: string;
+    password: string;
+    displayName: string;
+}
+
+export const registerWithPhone = (
+    params: PhoneRegisterParams,
+): Promise<LoginWithZaloResponse> =>
+    request<LoginWithZaloResponse>("POST", API.AUTH_REGISTER, params, {
+        useAuth: false,
+    });
+
+export interface PhoneLoginParams {
+    phone: string;
+    password: string;
+}
+
+export const loginWithPhone = (
+    params: PhoneLoginParams,
+): Promise<LoginWithZaloResponse> =>
+    request<LoginWithZaloResponse>("POST", API.AUTH_LOGIN, params, {
+        useAuth: false,
+    });
+
+export const setPassword = (password: string): Promise<User> =>
+    request<User>("POST", API.AUTH_SET_PASSWORD, { password });
+
 export interface UpdateProfileParams {
     displayName?: string;
     phone?: string;

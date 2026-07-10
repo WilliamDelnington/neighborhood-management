@@ -28,14 +28,13 @@ import {
     Complaint,
     ComplaintTimelineEntry,
     TrangThaiPhanAnh,
-    User,
 } from "@dts";
 import {
     assignComplaint,
     fetchComplaintDetail,
     updateComplaintStatus,
 } from "@service/complaintApi";
-import { fetchUsers } from "@service/userApi";
+import { AssignableStaff, fetchAssignableStaff } from "@service/userApi";
 
 const VIEW_ROLES = [
     "admin",
@@ -71,7 +70,7 @@ const ComplaintAdminDetailContent: React.FC = () => {
 
     const [assigneeSheetVisible, setAssigneeSheetVisible] = useState(false);
     const [assigneeSearch, setAssigneeSearch] = useState("");
-    const [assigneeResults, setAssigneeResults] = useState<User[]>([]);
+    const [assigneeStaff, setAssigneeStaff] = useState<AssignableStaff[]>([]);
     const [assigneeLoading, setAssigneeLoading] = useState(false);
     const [expectedCompletionDate, setExpectedCompletionDate] =
         useState<Date | null>(null);
@@ -99,11 +98,16 @@ const ComplaintAdminDetailContent: React.FC = () => {
     useEffect(() => {
         if (!assigneeSheetVisible) return;
         setAssigneeLoading(true);
-        fetchUsers(1, 20, assigneeSearch || undefined)
-            .then(res => setAssigneeResults(res.items))
-            .catch(() => setAssigneeResults([]))
+        fetchAssignableStaff()
+            .then(setAssigneeStaff)
+            .catch(() => setAssigneeStaff([]))
             .finally(() => setAssigneeLoading(false));
-    }, [assigneeSheetVisible, assigneeSearch]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [assigneeSheetVisible]);
+
+    const assigneeResults = assigneeStaff.filter(s =>
+        s.displayName.toLowerCase().includes(assigneeSearch.toLowerCase()),
+    );
 
     const handleUpdateStatus = async () => {
         if (!id || !newStatus) return;
@@ -128,7 +132,7 @@ const ComplaintAdminDetailContent: React.FC = () => {
         }
     };
 
-    const handleAssign = async (user: User) => {
+    const handleAssign = async (user: AssignableStaff) => {
         if (!id) return;
         try {
             setAssigning(true);
@@ -432,7 +436,6 @@ const ComplaintAdminDetailContent: React.FC = () => {
                                 <ListRow
                                     key={u.id}
                                     title={u.displayName}
-                                    subtitle={u.phone}
                                     onClick={() =>
                                         !assigning && handleAssign(u)
                                     }

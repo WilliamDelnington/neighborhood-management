@@ -70,6 +70,9 @@ const UserListContent: React.FC = () => {
     const [roleToAssign, setRoleToAssign] = useState<Role>("resident");
     const [assigningRole, setAssigningRole] = useState(false);
     const [revokingRole, setRevokingRole] = useState<Role | null>(null);
+    const [settingPrimaryRole, setSettingPrimaryRole] = useState<Role | null>(
+        null,
+    );
     const [revokingSession, setRevokingSession] = useState(false);
 
     const load = (targetPage: number, append: boolean) => {
@@ -167,6 +170,28 @@ const UserListContent: React.FC = () => {
             });
         } finally {
             setAssigningRole(false);
+        }
+    };
+
+    const handleSetPrimaryRole = async (r: Role) => {
+        if (!selectedUser) return;
+        try {
+            setSettingPrimaryRole(r);
+            const updated = await updateUser(selectedUser.id, {
+                primaryRole: r,
+            });
+            refreshSelected(updated);
+            openSnackbar({
+                type: "success",
+                text: `Đã đặt ${ROLE_LABEL[r]} làm vai trò chính`,
+            });
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Có lỗi xảy ra",
+            });
+        } finally {
+            setSettingPrimaryRole(null);
         }
     };
 
@@ -380,15 +405,42 @@ const UserListContent: React.FC = () => {
                                     py={2}
                                     className="border-b border-divider_01 last:border-0"
                                 >
-                                    <Text size="xSmall">{ROLE_LABEL[r]}</Text>
-                                    <Button
-                                        size="small"
-                                        variant="secondary"
-                                        loading={revokingRole === r}
-                                        onClick={() => handleRevokeRole(r)}
-                                    >
-                                        Thu hồi
-                                    </Button>
+                                    <Text size="xSmall">
+                                        {ROLE_LABEL[r]}
+                                        {r === selectedUser.primaryRole && (
+                                            <Text
+                                                size="xxSmall"
+                                                className="text-main"
+                                            >
+                                                {" "}
+                                                (Vai trò chính)
+                                            </Text>
+                                        )}
+                                    </Text>
+                                    <Box flex style={{ gap: 6 }}>
+                                        {r !== selectedUser.primaryRole && (
+                                            <Button
+                                                size="small"
+                                                variant="secondary"
+                                                loading={
+                                                    settingPrimaryRole === r
+                                                }
+                                                onClick={() =>
+                                                    handleSetPrimaryRole(r)
+                                                }
+                                            >
+                                                Đặt làm chính
+                                            </Button>
+                                        )}
+                                        <Button
+                                            size="small"
+                                            variant="secondary"
+                                            loading={revokingRole === r}
+                                            onClick={() => handleRevokeRole(r)}
+                                        >
+                                            Thu hồi
+                                        </Button>
+                                    </Box>
                                 </Box>
                             ))}
 

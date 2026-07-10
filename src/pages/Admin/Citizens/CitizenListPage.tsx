@@ -212,7 +212,9 @@ const CitizenListContent: React.FC = () => {
                                     c.cccd || c.phone || "Chưa có CCCD/SĐT"
                                 }
                                 right={badgeFor(c)}
-                                onClick={() => openEdit(c)}
+                                onClick={
+                                    canManage ? () => openEdit(c) : undefined
+                                }
                             />
                         ))}
                 </Box>

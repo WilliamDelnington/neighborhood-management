@@ -73,3 +73,9 @@ export const isValidPhoneNumber = (number: string) => {
     }
     return false;
 };
+
+/**
+ * Validate so dien thoai di dong Viet Nam (dau 0, dau so 3/5/7/8/9, 10 chu so).
+ */
+export const isValidVietnamesePhone = (number: string): boolean =>
+    /^0(3|5|7|8|9)\d{8}$/.test(number);

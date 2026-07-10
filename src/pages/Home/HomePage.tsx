@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Box, Text, useNavigate } from "zmp-ui";
 import { HomeHeader, AppBottomNav, PageLayout } from "@components/layout";
-import { Utinities, VerticalUtinities } from "@components/utilities";
-import { APP_UTINITIES, CONTACTS } from "@constants/utinities";
+import { Utinities } from "@components/utilities";
+import {
+    HomeInfoBanner,
+    EmergencyContactBox,
+    ContactInfoBox,
+} from "@components/home";
+import { APP_UTINITIES, EMERGENCY_HOTLINES } from "@constants/utinities";
 import { fetchPublicAnnouncements } from "@service/announcementApi";
 import { LOAI_THONG_BAO_LABEL } from "@constants/domain";
 import { Announcement } from "@dts";
@@ -22,14 +27,14 @@ const HomePage: React.FunctionComponent = () => {
     return (
         <PageLayout
             id="home-page"
-            customHeader={
-                <HomeHeader
-                    title="Tổ dân phố Hòa Bình"
-                    name="Phường Dương Nội, Hà Nội"
-                />
-            }
+            customHeader={<HomeHeader title="Tổ dân phố Hòa Bình" />}
             bottomNav={<AppBottomNav />}
         >
+            <HomeInfoBanner
+                title="Tổ dân phố Hòa Bình"
+                address="Phường Dương Nội, TP Hà Nội"
+            />
+
             <Utinities utinities={APP_UTINITIES} />
 
             <Box className="bg-white mt-2 p-4">
@@ -79,7 +84,12 @@ const HomePage: React.FunctionComponent = () => {
                 ))}
             </Box>
 
-            <VerticalUtinities title="Liên hệ nhanh" utinities={CONTACTS} />
+            <EmergencyContactBox hotlines={EMERGENCY_HOTLINES} />
+
+            <ContactInfoBox
+                title="Thông tin liên hệ tổ dân phố"
+                description="Tổ trưởng tổ dân phố Hòa Bình, phường Dương Nội, TP Hà Nội"
+            />
         </PageLayout>
     );
 };

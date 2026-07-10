@@ -15,6 +15,18 @@ export const fetchUsers = (
         role,
     });
 
+export interface AssignableStaff {
+    id: string;
+    displayName: string;
+}
+
+/**
+ * Danh sach rut gon nhan vien co the duoc gan phu trach phan anh - mo cho ca 4 vai
+ * tro duoc phep gan (khong chi admin nhu fetchUsers), tra ve toi thieu du lieu.
+ */
+export const fetchAssignableStaff = (): Promise<AssignableStaff[]> =>
+    request<AssignableStaff[]>("GET", API.USERS_ASSIGNABLE_STAFF);
+
 export const fetchUserById = (id: string): Promise<User> =>
     request<User>("GET", `${API.USERS}/${id}`);
 
@@ -25,6 +37,7 @@ export interface UpdateUserParams {
     householdId?: string | null;
     citizenId?: string | null;
     assignedClusters?: string[];
+    primaryRole?: Role;
 }
 
 export const updateUser = (

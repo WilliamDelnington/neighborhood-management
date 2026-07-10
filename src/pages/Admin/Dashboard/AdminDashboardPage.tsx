@@ -4,6 +4,7 @@ import { PageLayout, AppBottomNav } from "@components/layout";
 import {
     AdminGuard,
     StatCard,
+    ListRow,
     LoadingState,
     ErrorState,
 } from "@components/admin";
@@ -12,6 +13,7 @@ import { useStore } from "@store";
 import { DashboardSummary, fetchDashboardSummary } from "@service/dashboardApi";
 import { ROLE_LABEL } from "@constants/domain";
 import { Role } from "@dts";
+import { formatDateTime } from "@utils/date-time";
 
 type ModuleItem = {
     key: string;
@@ -94,7 +96,7 @@ const MODULES: ModuleItem[] = [
         key: "surveys",
         label: "Khảo sát",
         path: "/admin/surveys",
-        roles: ["admin", "secretary"],
+        roles: ["admin", "secretary", "neighborhood_leader"],
     },
     {
         key: "finance",
@@ -106,7 +108,7 @@ const MODULES: ModuleItem[] = [
         key: "reports",
         label: "Báo cáo",
         path: "/admin/reports",
-        roles: ["admin", "neighborhood_leader"],
+        roles: ["admin", "neighborhood_leader", "regional_police"],
     },
     {
         key: "users",
@@ -210,8 +212,48 @@ const AdminDashboardContent: React.FC = () => {
                                     : "danger"
                             }
                         />
+                        <StatCard
+                            label="Khảo sát đang mở"
+                            value={summary.surveyParticipation.openSurveys}
+                            onClick={() =>
+                                navigate("/admin/surveys", { animate: true })
+                            }
+                        />
+                        <StatCard
+                            label="Phản hồi khảo sát"
+                            value={summary.surveyParticipation.totalResponses}
+                            onClick={() =>
+                                navigate("/admin/surveys", { animate: true })
+                            }
+                        />
                     </Box>
                 )}
+
+                {!loading &&
+                    !error &&
+                    summary &&
+                    summary.upcomingMeetings.length > 0 && (
+                        <Box className="bg-white rounded-2xl px-4 pt-3 mt-3 shadow-sm">
+                            <Text.Title size="small" className="mb-1">
+                                Cuộc họp sắp tới
+                            </Text.Title>
+                            {summary.upcomingMeetings.map(meeting => (
+                                <ListRow
+                                    key={meeting.id}
+                                    title={meeting.title}
+                                    subtitle={`${formatDateTime(
+                                        new Date(meeting.startTime),
+                                    )} · ${meeting.location}`}
+                                    onClick={() =>
+                                        navigate(
+                                            `/admin/meetings/${meeting.id}/edit`,
+                                            { animate: true },
+                                        )
+                                    }
+                                />
+                            ))}
+                        </Box>
+                    )}
 
                 {!loading && !error && summary && summary.taskList.length > 0 && (
                     <Box className="bg-white rounded-2xl p-3 mt-3 shadow-sm">

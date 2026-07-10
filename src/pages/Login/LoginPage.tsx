@@ -6,7 +6,10 @@ import { useStore } from "@store";
 import { updateMyProfile } from "@service/authApi";
 import { ROLE_LABEL } from "@constants/domain";
 import { Role } from "@dts";
+import { isValidVietnamesePhone } from "@utils/string";
 import Logo from "@assets/logo.png";
+
+type PhoneAuthMode = "hidden" | "login" | "register";
 
 /**
  * Danh sach tai khoan mau tao boi backend-app/scripts/seed.ts - dung de test nhanh tung vai tro
@@ -39,8 +42,11 @@ const DEV_TEST_ACCOUNTS: { zaloUserId: string; name: string; role: Role }[] = [
 ];
 
 /**
- * Man hinh dang nhap bang Zalo + hoan tat onboarding (dia chi) cho nguoi dung moi.
- * Theo yeu cau: khong dung dang nhap sdt/mat khau lam kenh chinh cho Mini App nay.
+ * Man hinh dang nhap: nguoi dung co the dang nhap bang Zalo (mac dinh, nhanh nhat
+ * trong Mini App) hoac bang so dien thoai + mat khau (danh cho nguoi chua/khong the
+ * dung Zalo, hoac muon co them mot kenh dang nhap doc lap cho cung tai khoan - xem
+ * "Dat mat khau dang nhap" trong AccountPage). Sau do la buoc hoan tat onboarding
+ * (dia chi) cho nguoi dung moi.
  */
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -49,6 +55,12 @@ const LoginPage: React.FC = () => {
     const [address, setAddress] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
+    const [phoneAuthMode, setPhoneAuthMode] = useState<PhoneAuthMode>("hidden");
+    const [phone, setPhone] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [displayName, setDisplayName] = useState("");
+
     const [
         token,
         user,
@@ -56,6 +68,8 @@ const LoginPage: React.FC = () => {
         bootstrapError,
         bootstrapSession,
         loginAsTestUser,
+        loginWithPhone,
+        registerWithPhone,
         refreshMe,
     ] = useStore(state => [
         state.token,
@@ -64,6 +78,8 @@ const LoginPage: React.FC = () => {
         state.bootstrapError,
         state.bootstrapSession,
         state.loginAsTestUser,
+        state.loginWithPhone,
+        state.registerWithPhone,
         state.refreshMe,
     ]);
 
@@ -87,6 +103,39 @@ const LoginPage: React.FC = () => {
 
     const handleLoginAsTestUser = (zaloUserId: string, name: string) => {
         loginAsTestUser(zaloUserId, name);
+    };
+
+    const handlePhoneSubmit = () => {
+        if (!isValidVietnamesePhone(phone.trim())) {
+            openSnackbar({
+                type: "error",
+                text: "Số điện thoại không hợp lệ",
+            });
+            return;
+        }
+        if (password.length < 6) {
+            openSnackbar({
+                type: "error",
+                text: "Mật khẩu phải có ít nhất 6 ký tự",
+            });
+            return;
+        }
+        if (phoneAuthMode === "register") {
+            if (!displayName.trim()) {
+                openSnackbar({ type: "error", text: "Vui lòng nhập họ tên" });
+                return;
+            }
+            if (password !== confirmPassword) {
+                openSnackbar({
+                    type: "error",
+                    text: "Mật khẩu nhập lại không khớp",
+                });
+                return;
+            }
+            registerWithPhone(phone.trim(), password, displayName.trim());
+        } else {
+            loginWithPhone(phone.trim(), password);
+        }
     };
 
     const handleCompleteOnboarding = async () => {
@@ -152,6 +201,94 @@ const LoginPage: React.FC = () => {
                     >
                         {bootstrapError}
                     </Text>
+                )}
+
+                {!token && phoneAuthMode === "hidden" && (
+                    <Text
+                        size="xSmall"
+                        className="text-white mt-4 text-center"
+                        onClick={() => setPhoneAuthMode("login")}
+                    >
+                        Đăng nhập bằng số điện thoại
+                    </Text>
+                )}
+
+                {!token && phoneAuthMode !== "hidden" && (
+                    <Box className="bg-white rounded-2xl p-4 w-full mt-6">
+                        <Text.Title size="small">
+                            {phoneAuthMode === "register"
+                                ? "Đăng ký tài khoản"
+                                : "Đăng nhập bằng số điện thoại"}
+                        </Text.Title>
+
+                        {phoneAuthMode === "register" && (
+                            <Box mt={3}>
+                                <Input
+                                    label="Họ tên"
+                                    value={displayName}
+                                    onChange={e =>
+                                        setDisplayName(e.target.value)
+                                    }
+                                />
+                            </Box>
+                        )}
+                        <Box mt={3}>
+                            <Input
+                                label="Số điện thoại"
+                                placeholder="0xxxxxxxxx"
+                                value={phone}
+                                onChange={e => setPhone(e.target.value)}
+                            />
+                        </Box>
+                        <Box mt={3}>
+                            <Input
+                                type="password"
+                                label="Mật khẩu"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                            />
+                        </Box>
+                        {phoneAuthMode === "register" && (
+                            <Box mt={3}>
+                                <Input
+                                    type="password"
+                                    label="Nhập lại mật khẩu"
+                                    value={confirmPassword}
+                                    onChange={e =>
+                                        setConfirmPassword(e.target.value)
+                                    }
+                                />
+                            </Box>
+                        )}
+
+                        <Box mt={4}>
+                            <Button
+                                fullWidth
+                                loading={bootstrapping}
+                                onClick={handlePhoneSubmit}
+                            >
+                                {phoneAuthMode === "register"
+                                    ? "Đăng ký"
+                                    : "Đăng nhập"}
+                            </Button>
+                        </Box>
+
+                        <Text
+                            size="xSmall"
+                            className="text-main text-center mt-3"
+                            onClick={() =>
+                                setPhoneAuthMode(
+                                    phoneAuthMode === "register"
+                                        ? "login"
+                                        : "register",
+                                )
+                            }
+                        >
+                            {phoneAuthMode === "register"
+                                ? "Đã có tài khoản? Đăng nhập"
+                                : "Chưa có tài khoản? Đăng ký"}
+                        </Text>
+                    </Box>
                 )}
 
                 {import.meta.env.DEV && !token && (

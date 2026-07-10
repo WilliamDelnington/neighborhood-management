@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, Icon, Modal, Select, Sheet, useSnackbar } from "zmp-ui";
+import { useLocation } from "react-router-dom";
 import { PageLayout, AppBottomNav } from "@components/layout";
 import {
     AdminGuard,
@@ -74,6 +75,7 @@ const PcccListPage: React.FC = () => (
 
 const PcccListContent: React.FC = () => {
     const { openSnackbar } = useSnackbar();
+    const location = useLocation();
     const user = useStore(state => state.user);
     const canManage =
         !!user &&
@@ -82,7 +84,11 @@ const PcccListContent: React.FC = () => {
             user.roles.includes("regional_police"));
 
     const [summary, setSummary] = useState<Record<string, number>>({});
-    const [riskLevel, setRiskLevel] = useState<MucNguyCoPccc | "">("");
+    const [riskLevel, setRiskLevel] = useState<MucNguyCoPccc | "">(
+        (new URLSearchParams(location.search).get(
+            "riskLevel",
+        ) as MucNguyCoPccc | null) || "",
+    );
     const [items, setItems] = useState<PcccCheck[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -270,7 +276,9 @@ const PcccListContent: React.FC = () => {
                                         tone={RISK_TONE[c.riskLevel]}
                                     />
                                 }
-                                onClick={() => openEdit(c)}
+                                onClick={
+                                    canManage ? () => openEdit(c) : undefined
+                                }
                             />
                         ))}
                 </Box>

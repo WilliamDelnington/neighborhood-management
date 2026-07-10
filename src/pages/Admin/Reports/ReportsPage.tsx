@@ -118,7 +118,7 @@ const renderValue = (value: unknown, depth = 0): React.ReactNode => {
 };
 
 const ReportsPage: React.FC = () => (
-    <AdminGuard roles={["admin", "neighborhood_leader"]}>
+    <AdminGuard roles={["admin", "neighborhood_leader", "regional_police"]}>
         <PageLayout
             id="admin-reports"
             title="Báo cáo"
@@ -133,32 +133,43 @@ const ReportsContent: React.FC = () => {
     const { openSnackbar } = useSnackbar();
     const user = useStore(state => state.user);
     const isAdmin = !!user && user.roles.includes("admin");
+    const isNeighborhoodLeader =
+        !!user && user.roles.includes("neighborhood_leader");
+    const isRegionalPolice = !!user && user.roles.includes("regional_police");
 
     const tabs: ReportTab[] = [
-        {
-            key: "population",
-            label: "Dân cư",
-            fetch: fetchPopulationReport,
-            excelFileName: "bao-cao-dan-cu.xlsx",
-        },
-        {
-            key: "complaints",
-            label: "Phản ánh",
-            fetch: () => fetchComplaintReport(),
-            excelFileName: "bao-cao-phan-anh.xlsx",
-        },
-        {
-            key: "pccc",
-            label: "PCCC",
-            fetch: fetchPcccReport,
-            excelFileName: "bao-cao-pccc.xlsx",
-        },
-        {
-            key: "security",
-            label: "An ninh",
-            fetch: fetchSecurityReport,
-            excelFileName: "bao-cao-an-ninh.xlsx",
-        },
+        ...(isAdmin || isNeighborhoodLeader
+            ? [
+                  {
+                      key: "population" as ReportTabKey,
+                      label: "Dân cư",
+                      fetch: fetchPopulationReport,
+                      excelFileName: "bao-cao-dan-cu.xlsx",
+                  },
+                  {
+                      key: "complaints" as ReportTabKey,
+                      label: "Phản ánh",
+                      fetch: () => fetchComplaintReport(),
+                      excelFileName: "bao-cao-phan-anh.xlsx",
+                  },
+              ]
+            : []),
+        ...(isAdmin || isNeighborhoodLeader || isRegionalPolice
+            ? [
+                  {
+                      key: "pccc" as ReportTabKey,
+                      label: "PCCC",
+                      fetch: fetchPcccReport,
+                      excelFileName: "bao-cao-pccc.xlsx",
+                  },
+                  {
+                      key: "security" as ReportTabKey,
+                      label: "An ninh",
+                      fetch: fetchSecurityReport,
+                      excelFileName: "bao-cao-an-ninh.xlsx",
+                  },
+              ]
+            : []),
         ...(isAdmin
             ? [
                   {

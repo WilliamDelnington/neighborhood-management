@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, Select, useNavigate } from "zmp-ui";
+import { useLocation } from "react-router-dom";
 import { PageLayout, AppBottomNav } from "@components/layout";
 import {
     AdminGuard,
@@ -33,9 +34,14 @@ const ComplaintAdminListPage: React.FC = () => (
 
 const ComplaintAdminListContent: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const initialStatus =
+        (new URLSearchParams(location.search).get(
+            "status",
+        ) as TrangThaiPhanAnh | null) || "";
 
     const [search, setSearch] = useState("");
-    const [status, setStatus] = useState<TrangThaiPhanAnh | "">("");
+    const [status, setStatus] = useState<TrangThaiPhanAnh | "">(initialStatus);
     const [category, setCategory] = useState<NhomPhanAnh | "">("");
 
     const [items, setItems] = useState<Complaint[]>([]);
