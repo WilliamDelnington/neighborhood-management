@@ -1,0 +1,1 @@
+import"./vendor-react-Dyk2Mbpm.js";import"./PageLayout-BIzk6KRu.js";import"./index-BRzG-Inz.js";import"./vendor-zmp-B1YMxWW5.js";const i="dashboard.read",r=(s,o)=>!!s?.permissions?.includes(o),c=s=>r(s,i);export{c as a,r as h};

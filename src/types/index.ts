@@ -43,6 +43,7 @@ export type User = {
     address?: string;
     roles: Role[];
     primaryRole: Role;
+    permissions: string[];
     status: UserStatus;
     householdId?: string;
     citizenId?: string;
@@ -58,6 +59,25 @@ export type LoaiSoHuu = "chinh_chu" | "cho_thue";
 export type GioiTinh = "nam" | "nu" | "khac";
 export type LoaiCuTru = "thuong_tru" | "tam_tru";
 
+export type HouseStatus =
+    | "unverified"
+    | "pending"
+    | "verified"
+    | "denied"
+    | "locked";
+
+export type House = {
+    _id: string;
+    code: string;
+    cluster: string;
+    address: string;
+    status: HouseStatus;
+    ownerId?: string | { _id: string; displayName: string };
+    note?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
 export type Household = {
     _id: string;
     code: string;
@@ -68,6 +88,31 @@ export type Household = {
     memberCount: number;
     ownershipType: LoaiSoHuu;
     needsSupport: boolean;
+    houseId?: string | House;
+    note?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type BusinessType = {
+    _id: string;
+    name: string;
+    description?: string;
+    active: boolean;
+    sortOrder: number;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type Business = {
+    _id: string;
+    name: string;
+    houseId: string | House;
+    cluster: string;
+    businessType?: string | BusinessType;
+    ownerName?: string;
+    phone?: string;
+    active: boolean;
     note?: string;
     createdAt: string;
     updatedAt: string;
@@ -245,8 +290,12 @@ export type Utinity = {
     label: string;
     icon?: FC<any>;
     iconSrc?: string;
+    color?: string;
+    bgColor?: string;
     path?: string;
     link?: string;
     inDevelopment?: boolean;
     phoneNumber?: string;
+    requiredPermission?: string;
+    showBadge?: boolean;
 };

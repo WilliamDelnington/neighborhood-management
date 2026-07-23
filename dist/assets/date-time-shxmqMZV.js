@@ -1,0 +1,1 @@
+const s=t=>{if(!t)return"";let e=t.getDate(),n=t.getMonth()+1;const o=t.getFullYear(),r=t.getHours()<10?`0${t.getHours()}`:t.getHours().toString(),g=t.getMinutes()<10?`0${t.getMinutes()}`:t.getMinutes().toString();return e<10&&(e=`0${e}`),n<10&&(n=`0${n}`),`${r}:${g} - ${e}/${n}/${o}`};export{s as f};

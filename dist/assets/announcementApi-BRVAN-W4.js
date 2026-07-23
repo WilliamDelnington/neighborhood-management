@@ -1,0 +1,1 @@
+import{D as A,r as s,A as t}from"./index-BRzG-Inz.js";const E=(e=1,n=A)=>s("GET",t.ANNOUNCEMENTS,{page:e,limit:n},{useAuth:!1}),o=e=>s("GET",`${t.ANNOUNCEMENTS}/${e}`,void 0,{useAuth:!1});export{o as a,E as f};

@@ -10,6 +10,7 @@ import {
     StatusBadge,
 } from "@components/admin";
 import { useStore } from "@store";
+import { hasPermission } from "@components/role";
 import {
     fetchMyComplaints,
     lookupComplaintByCode,
@@ -20,10 +21,13 @@ import {
 } from "@constants/domain";
 import { Complaint, ComplaintDetail } from "@dts";
 import ComplaintTimelineView from "./ComplaintTimelineView";
+import StaffComplaintInbox from "./StaffComplaintInbox";
 
 const ComplaintLookupPage: React.FC = () => {
     const navigate = useNavigate();
     const token = useStore(state => state.token);
+    const user = useStore(state => state.user);
+    const canViewInbox = hasPermission(user, "complaints.read");
 
     const [code, setCode] = useState("");
     const [searching, setSearching] = useState(false);
@@ -73,7 +77,7 @@ const ComplaintLookupPage: React.FC = () => {
     return (
         <PageLayout
             id="complaint-lookup-page"
-            title="Tra cứu phản ánh"
+            title={canViewInbox ? "Phản ánh" : "Tra cứu phản ánh"}
             bottomNav={<AppBottomNav />}
         >
             <Box p={4}>
@@ -156,6 +160,8 @@ const ComplaintLookupPage: React.FC = () => {
                             ))}
                     </Box>
                 )}
+
+                {canViewInbox && <StaffComplaintInbox />}
             </Box>
         </PageLayout>
     );

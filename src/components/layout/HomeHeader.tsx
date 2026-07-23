@@ -1,9 +1,9 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect } from "react";
 import { Box, Icon, useNavigate } from "zmp-ui";
 import styled from "styled-components";
 import tw from "twin.macro";
 import Logo from "@assets/logo.png";
-import { fetchUnreadNotificationCount } from "@service/notificationApi";
+import { useStore } from "@store";
 
 export interface HomeHeaderProps {
     title: string;
@@ -46,13 +46,14 @@ const UnreadBadge = styled.div`
 const HomeHeader: FC<HomeHeaderProps> = props => {
     const { title } = props;
     const navigate = useNavigate();
-    const [unreadCount, setUnreadCount] = useState(0);
+    const unreadCount = useStore(state => state.unreadCount);
+    const refreshNotificationStatus = useStore(
+        state => state.refreshNotificationStatus,
+    );
 
     useEffect(() => {
-        fetchUnreadNotificationCount()
-            .then(res => setUnreadCount(res.count))
-            .catch(() => setUnreadCount(0));
-    }, []);
+        refreshNotificationStatus();
+    }, [refreshNotificationStatus]);
 
     return (
         <HeaderContainer>

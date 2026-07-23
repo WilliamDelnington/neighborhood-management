@@ -8,7 +8,7 @@ import { useStore } from "@store";
  * backend) se hien loading; neu that bai/chua co token se dieu huong ve trang dang nhap.
  *
  * Luu y: import DefaultHeader truc tiep (khong qua barrel @components/layout) de tranh vong lap
- * import - AppBottomNav (trong @components/layout) lai import STAFF_ROLES tu chinh module nay.
+ * import - AppBottomNav (trong @components/layout) lai import hasAdminAccess tu chinh module nay.
  */
 const RequireAuth: React.FC<PropsWithChildren> = ({ children }) => {
     const navigate = useNavigate();

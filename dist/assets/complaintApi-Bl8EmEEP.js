@@ -1,0 +1,1 @@
+import{D as e,r as a,A as s}from"./index-BRzG-Inz.js";const C=t=>a("POST",s.COMPLAINTS,t),T=(t=1,o=e)=>a("GET",s.COMPLAINTS_MINE,{page:t,limit:o}),c=t=>a("GET",s.COMPLAINTS_LOOKUP,{code:t},{useAuth:!1}),l=t=>a("GET",`${s.COMPLAINTS}/${t}`);export{l as a,C as c,T as f,c as l};

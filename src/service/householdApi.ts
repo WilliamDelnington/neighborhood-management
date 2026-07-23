@@ -1,29 +1,49 @@
-import { API, DEFAULT_PAGE_SIZE } from "@constants/common";
+import { API } from "@constants/common";
 import { Citizen, Household, LoaiSoHuu, PaginatedData } from "@dts";
 import { request } from "./request";
 
-export interface ListHouseholdsParams {
-    page?: number;
-    limit?: number;
+export const searchHouseholds = (params: {
     search?: string;
     cluster?: string;
-}
-
-export const fetchHouseholds = (
-    params: ListHouseholdsParams = {},
-): Promise<PaginatedData<Household>> =>
-    request<PaginatedData<Household>>("GET", API.HOUSEHOLDS, {
-        page: params.page || 1,
-        limit: params.limit || DEFAULT_PAGE_SIZE,
+    page?: number;
+    limit?: number;
+}): Promise<PaginatedData<Household>> =>
+    request<PaginatedData<Household>>("GET", API.HOUSEHOLDS_LOOKUP, {
         search: params.search,
         cluster: params.cluster,
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+    });
+
+/**
+ * Danh sach ho dan day du (yeu cau quyen households.read) - dung cho man hinh
+ * Quan tri trong Mini App, khac voi searchHouseholds (endpoint lookup gioi han
+ * truong tra ve, danh cho nguoi dan chon ho cua minh).
+ */
+export const fetchHouseholds = (params: {
+    search?: string;
+    cluster?: string;
+    page?: number;
+    limit?: number;
+}): Promise<PaginatedData<Household>> =>
+    request<PaginatedData<Household>>("GET", API.HOUSEHOLDS, {
+        search: params.search,
+        cluster: params.cluster,
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
     });
 
 export const fetchHouseholdById = (id: string): Promise<Household> =>
     request<Household>("GET", `${API.HOUSEHOLDS}/${id}`);
 
-export const fetchHouseholdCitizens = (id: string): Promise<Citizen[]> =>
-    request<Citizen[]>("GET", `${API.HOUSEHOLDS}/${id}/citizens`);
+export const fetchHouseholdCitizens = (
+    id: string,
+    params: { page?: number; limit?: number } = {},
+): Promise<PaginatedData<Citizen>> =>
+    request<PaginatedData<Citizen>>("GET", `${API.HOUSEHOLDS}/${id}/citizens`, {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+    });
 
 export interface HouseholdInput {
     cluster: string;
@@ -33,6 +53,7 @@ export interface HouseholdInput {
     memberCount?: number;
     ownershipType?: LoaiSoHuu;
     needsSupport?: boolean;
+    houseId?: string | null;
     note?: string;
 }
 

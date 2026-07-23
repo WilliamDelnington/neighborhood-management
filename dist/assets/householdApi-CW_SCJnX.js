@@ -1,0 +1,1 @@
+import{r as s,A as t}from"./index-BRzG-Inz.js";const l=e=>s("GET",t.HOUSEHOLDS_LOOKUP,{search:e.search,cluster:e.cluster,page:e.page??1,limit:e.limit??20}),i=e=>s("GET",t.HOUSEHOLDS,{search:e.search,cluster:e.cluster,page:e.page??1,limit:e.limit??20});export{i as f,l as s};

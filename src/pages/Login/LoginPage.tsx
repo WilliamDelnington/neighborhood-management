@@ -5,8 +5,12 @@ import { Button, Input } from "@components/customized";
 import { useStore } from "@store";
 import { updateMyProfile } from "@service/authApi";
 import { ROLE_LABEL } from "@constants/domain";
-import { Role } from "@dts";
+import { Household, Role } from "@dts";
 import { isValidVietnamesePhone } from "@utils/string";
+import {
+    HouseholdPickerSheet,
+    NeighborhoodPickerSheet,
+} from "@components/household";
 import Logo from "@assets/logo.png";
 
 type PhoneAuthMode = "hidden" | "login" | "register";
@@ -42,17 +46,21 @@ const DEV_TEST_ACCOUNTS: { zaloUserId: string; name: string; role: Role }[] = [
 ];
 
 /**
- * Man hinh dang nhap: nguoi dung co the dang nhap bang Zalo (mac dinh, nhanh nhat
- * trong Mini App) hoac bang so dien thoai + mat khau (danh cho nguoi chua/khong the
- * dung Zalo, hoac muon co them mot kenh dang nhap doc lap cho cung tai khoan - xem
- * "Dat mat khau dang nhap" trong AccountPage). Sau do la buoc hoan tat onboarding
- * (dia chi) cho nguoi dung moi.
+ * Man hinh dang nhap: san pham chinh thuc chi dang nhap bang Zalo. Kenh dang nhap
+ * bang so dien thoai + mat khau chi hien khi import.meta.env.DEV (build dev), dung
+ * de test khi chua co tai khoan Zalo sandbox phu hop - khong duoc bat trong production.
+ * Sau do la buoc hoan tat onboarding (dia chi) cho nguoi dung moi.
  */
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { openSnackbar } = useSnackbar();
     const [address, setAddress] = useState("");
+    const [neighborhood, setNeighborhood] = useState<string | null>(null);
+    const [neighborhoodPickerVisible, setNeighborhoodPickerVisible] =
+        useState(false);
+    const [household, setHousehold] = useState<Household | null>(null);
+    const [householdPickerVisible, setHouseholdPickerVisible] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const [phoneAuthMode, setPhoneAuthMode] = useState<PhoneAuthMode>("hidden");
@@ -138,14 +146,30 @@ const LoginPage: React.FC = () => {
         }
     };
 
+    const handleSelectNeighborhood = (selected: string) => {
+        setNeighborhood(selected);
+        setHousehold(null);
+    };
+
     const handleCompleteOnboarding = async () => {
+        if (!neighborhood) {
+            openSnackbar({ type: "error", text: "Vui lòng chọn tổ dân phố" });
+            return;
+        }
+        if (!household) {
+            openSnackbar({ type: "error", text: "Vui lòng chọn hộ khẩu" });
+            return;
+        }
         if (!address.trim()) {
             openSnackbar({ type: "error", text: "Vui lòng nhập địa chỉ" });
             return;
         }
         try {
             setSubmitting(true);
-            await updateMyProfile({ address: address.trim() });
+            await updateMyProfile({
+                address: address.trim(),
+                householdId: household._id,
+            });
             await refreshMe();
             navigate("/", { animate: true });
         } catch (err: any) {
@@ -157,6 +181,13 @@ const LoginPage: React.FC = () => {
             setSubmitting(false);
         }
     };
+
+    const householdLabel = household
+        ? `${household.code} — ${household.address}`
+        : "Chọn hộ khẩu...";
+    const householdPlaceholder = neighborhood
+        ? householdLabel
+        : "Chọn tổ dân phố trước";
 
     return (
         <PageLayout
@@ -203,7 +234,7 @@ const LoginPage: React.FC = () => {
                     </Text>
                 )}
 
-                {!token && phoneAuthMode === "hidden" && (
+                {import.meta.env.DEV && !token && phoneAuthMode === "hidden" && (
                     <Text
                         size="xSmall"
                         className="text-white mt-4 text-center"
@@ -213,7 +244,7 @@ const LoginPage: React.FC = () => {
                     </Text>
                 )}
 
-                {!token && phoneAuthMode !== "hidden" && (
+                {import.meta.env.DEV && !token && phoneAuthMode !== "hidden" && (
                     <Box className="bg-white rounded-2xl p-4 w-full mt-6">
                         <Text.Title size="small">
                             {phoneAuthMode === "register"
@@ -330,9 +361,52 @@ const LoginPage: React.FC = () => {
                     <Box className="bg-white rounded-2xl p-4 w-full mt-4">
                         <Text.Title size="small">Hoàn tất thông tin</Text.Title>
                         <Text size="xSmall" className="text-text_2 mb-3">
-                            Vui lòng cho biết địa chỉ để tổ dân phố hỗ trợ tốt
-                            hơn.
+                            Vui lòng chọn tổ dân phố, hộ khẩu và cho biết địa
+                            chỉ để tổ dân phố hỗ trợ tốt hơn.
                         </Text>
+                        <Box mb={3}>
+                            <Text size="xSmall" className="text-text_2 mb-1">
+                                Tổ dân phố
+                            </Text>
+                            <Box
+                                className="bg-ng_10 rounded-lg px-3 py-2"
+                                onClick={() =>
+                                    setNeighborhoodPickerVisible(true)
+                                }
+                            >
+                                <Text
+                                    size="small"
+                                    className={
+                                        neighborhood ? "" : "text-text_3"
+                                    }
+                                >
+                                    {neighborhood || "Chọn tổ dân phố..."}
+                                </Text>
+                            </Box>
+                        </Box>
+                        <Box mb={3}>
+                            <Text size="xSmall" className="text-text_2 mb-1">
+                                Hộ khẩu
+                            </Text>
+                            <Box
+                                className={`rounded-lg px-3 py-2 ${
+                                    neighborhood
+                                        ? "bg-ng_10"
+                                        : "bg-ng_10 opacity-50"
+                                }`}
+                                onClick={() =>
+                                    neighborhood &&
+                                    setHouseholdPickerVisible(true)
+                                }
+                            >
+                                <Text
+                                    size="small"
+                                    className={household ? "" : "text-text_3"}
+                                >
+                                    {householdPlaceholder}
+                                </Text>
+                            </Box>
+                        </Box>
                         <Input
                             label="Địa chỉ"
                             placeholder="Số nhà, ngõ, cụm dân cư..."
@@ -348,6 +422,17 @@ const LoginPage: React.FC = () => {
                                 Hoàn tất
                             </Button>
                         </Box>
+                        <NeighborhoodPickerSheet
+                            visible={neighborhoodPickerVisible}
+                            onClose={() => setNeighborhoodPickerVisible(false)}
+                            onSelect={handleSelectNeighborhood}
+                        />
+                        <HouseholdPickerSheet
+                            visible={householdPickerVisible}
+                            cluster={neighborhood || undefined}
+                            onClose={() => setHouseholdPickerVisible(false)}
+                            onSelect={setHousehold}
+                        />
                     </Box>
                 )}
             </Box>

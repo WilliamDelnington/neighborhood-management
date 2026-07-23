@@ -2,18 +2,23 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { BottomNavigation, Icon } from "zmp-ui";
 import { useStore } from "@store";
-import { STAFF_ROLES } from "@components/role";
+import { hasPermission } from "@components/role";
 
 /**
- * Thanh dieu huong duoi cung, thay the sidebar desktop. Nguoi dan thay 4 muc co ban;
- * can bo/quan tri co them muc "Quan tri" dan vao khu vuc nghiep vu rieng.
+ * Thanh dieu huong duoi cung, thay the sidebar desktop. Muc "Danh muc" (nha so /
+ * ho dan / nhan khau) chi hien khi tai khoan duoc cap it nhat mot trong cac
+ * quyen doc tuong ung - moi quyen duoc admin cau hinh rieng theo vai tro (xem
+ * trang Vai tro & phan quyen), khong con gan voi "dashboard.read" nhu truoc.
+ * Muc "Phan anh" luon hien voi moi tai khoan (nguoi dan gui/tra cuu, nhan vien
+ * co them hop thu xem phan anh trong pham vi phu trach - xem ComplaintLookupPage).
  */
 const AppBottomNav: React.FC = () => {
     const { pathname } = useLocation();
     const user = useStore(state => state.user);
-    const isStaff =
-        !!user &&
-        user.roles.some(r => (STAFF_ROLES as readonly string[]).includes(r));
+    const canViewSections =
+        hasPermission(user, "houses.read") ||
+        hasPermission(user, "households.read") ||
+        hasPermission(user, "citizens.read");
 
     const activeKey = (() => {
         if (pathname === "/") return "home";
@@ -40,23 +45,22 @@ const AppBottomNav: React.FC = () => {
                 icon={<Icon icon="zi-notif" />}
                 linkTo="/announcements"
             />
-            {isStaff ? (
+            {canViewSections && (
                 <BottomNavigation.Item
                     key="admin"
                     itemKey="admin"
-                    label="Quản trị"
+                    label="Danh mục"
                     icon={<Icon icon="zi-setting" />}
                     linkTo="/admin"
                 />
-            ) : (
-                <BottomNavigation.Item
-                    key="complaints"
-                    itemKey="complaints"
-                    label="Phản ánh"
-                    icon={<Icon icon="zi-note" />}
-                    linkTo="/complaints/lookup"
-                />
             )}
+            <BottomNavigation.Item
+                key="complaints"
+                itemKey="complaints"
+                label="Phản ánh"
+                icon={<Icon icon="zi-note" />}
+                linkTo="/complaints/lookup"
+            />
             <BottomNavigation.Item
                 key="account"
                 itemKey="account"

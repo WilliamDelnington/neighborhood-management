@@ -10,6 +10,7 @@ import {
 } from "@service/notificationApi";
 import { formatDateTime } from "@utils/date-time";
 import { AppNotification } from "@dts";
+import { useStore } from "@store";
 
 /**
  * Cac loai doi tuong lien quan co the dieu huong den man hinh chi tiet tuong ung
@@ -20,6 +21,7 @@ const RELATED_MODEL_PATH: Record<string, string> = {
     Announcement: "/announcements",
     Meeting: "/meetings",
     Survey: "/surveys",
+    HouseRecord: "/admin/houses",
 };
 
 const NotificationsPage: React.FC = () => (
@@ -30,6 +32,12 @@ const NotificationsPage: React.FC = () => (
 
 const NotificationsPageContent: React.FC = () => {
     const navigate = useNavigate();
+    const refreshNotificationStatus = useStore(
+        state => state.refreshNotificationStatus,
+    );
+    const markNotificationsSeen = useStore(
+        state => state.markNotificationsSeen,
+    );
     const [items, setItems] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -46,9 +54,15 @@ const NotificationsPageContent: React.FC = () => {
 
     useEffect(load, []);
 
+    useEffect(() => {
+        markNotificationsSeen();
+    }, [markNotificationsSeen]);
+
     const handleOpen = (item: AppNotification) => {
         if (!item.readAt) {
-            markNotificationRead(item.deliveryId).catch(() => undefined);
+            markNotificationRead(item.deliveryId)
+                .then(() => refreshNotificationStatus())
+                .catch(() => undefined);
             setItems(prev =>
                 prev.map(n =>
                     n.deliveryId === item.deliveryId
@@ -76,6 +90,7 @@ const NotificationsPageContent: React.FC = () => {
                     readAt: n.readAt || new Date().toISOString(),
                 })),
             );
+            refreshNotificationStatus();
         } catch {
             // Bo qua loi mang - nguoi dung co the bam lai
         } finally {

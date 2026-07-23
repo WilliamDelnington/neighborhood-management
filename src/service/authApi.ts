@@ -56,6 +56,7 @@ export interface UpdateProfileParams {
     displayName?: string;
     phone?: string;
     address?: string;
+    householdId?: string;
     notificationPermission?: boolean;
 }
 

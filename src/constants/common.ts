@@ -2,6 +2,12 @@ export const BASE_URL = import.meta.env.VITE_BASE_URL;
 export const MINI_APP_ID =
     window.APP_ID || (import.meta.env.VITE_MINI_APP_ID as string);
 
+/**
+ * URL cua trang quan tri web rieng (quan-ly-to-dan-pho-hoa-binh-admin) - mo trong
+ * trinh duyet ngoai qua openWebView, khong con nam trong Mini App nay nua.
+ */
+export const ADMIN_APP_URL = import.meta.env.VITE_ADMIN_APP_URL as string;
+
 export const API = {
     AUTH_ZALO_LOGIN: "/api/auth/zalo/login",
     AUTH_REGISTER: "/api/auth/register",
@@ -10,12 +16,13 @@ export const API = {
     AUTH_ME: "/api/auth/me",
     AUTH_LOGOUT: "/api/auth/logout",
 
-    USERS: "/api/users",
-    USERS_ASSIGNABLE_STAFF: "/api/users/assignable-staff",
-    ROLES: "/api/roles",
-
+    HOUSES: "/api/houses",
     HOUSEHOLDS: "/api/households",
+    HOUSEHOLDS_LOOKUP: "/api/households/lookup",
     CITIZENS: "/api/citizens",
+    NEIGHBORHOODS: "/api/neighborhoods",
+    BUSINESSES: "/api/businesses",
+    BUSINESS_TYPES: "/api/business-types",
 
     COMPLAINTS: "/api/complaints",
     COMPLAINTS_MINE: "/api/complaints/mine",
@@ -25,20 +32,12 @@ export const API = {
     MEETINGS: "/api/meetings",
     SURVEYS: "/api/surveys",
 
-    PCCC: "/api/pccc",
-    SECURITY: "/api/security",
-
     NOTIFICATIONS: "/api/notifications",
     NOTIFICATIONS_UNREAD_COUNT: "/api/notifications/unread-count",
     NOTIFICATIONS_READ_ALL: "/api/notifications/read-all",
 
-    FINANCE: "/api/finance",
     FILES: "/api/files",
     SETTINGS: "/api/settings",
-
-    REPORTS: "/api/reports",
-    IMPORT: "/api/import",
-    EXPORT: "/api/export",
 };
 
 export const SEARCH_NOT_FOUND = "Không tìm thấy thông tin";

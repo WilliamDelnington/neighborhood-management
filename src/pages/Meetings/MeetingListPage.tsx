@@ -10,6 +10,7 @@ import {
 import { fetchMeetings } from "@service/meetingApi";
 import { formatDateTime } from "@utils/date-time";
 import { Meeting } from "@dts";
+import { useStore } from "@store";
 
 const FILTERS: { key: "upcoming" | "all"; label: string }[] = [
     { key: "upcoming", label: "Sắp tới" },
@@ -18,6 +19,7 @@ const FILTERS: { key: "upcoming" | "all"; label: string }[] = [
 
 const MeetingListPage: React.FC = () => {
     const navigate = useNavigate();
+    const markMeetingsSeen = useStore(state => state.markMeetingsSeen);
     const [filter, setFilter] = useState<"upcoming" | "all">("upcoming");
     const [items, setItems] = useState<Meeting[]>([]);
     const [loading, setLoading] = useState(true);
@@ -33,6 +35,10 @@ const MeetingListPage: React.FC = () => {
     };
 
     useEffect(load, [filter]);
+
+    useEffect(() => {
+        markMeetingsSeen();
+    }, [markMeetingsSeen]);
 
     return (
         <PageLayout

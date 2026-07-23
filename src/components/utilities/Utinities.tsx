@@ -9,8 +9,11 @@ interface UtinitiesProps {
 }
 
 const UtinitiesWrapper = styled.div`
-    ${tw`flex flex-row flex-wrap justify-between bg-ui_bg bg-center bg-no-repeat`};
+    ${tw`bg-ui_bg bg-center bg-no-repeat`};
     background-image: url(${Background});
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
     padding: 16px;
     padding-top: 24px;
 `;

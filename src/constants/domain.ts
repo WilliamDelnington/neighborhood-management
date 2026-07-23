@@ -1,6 +1,7 @@
 import type {
     DangKyHop,
     GioiTinh,
+    HouseStatus,
     LoaiCauHoiKhaoSat,
     LoaiCuTru,
     LoaiSoHuu,
@@ -52,6 +53,25 @@ export const TRANG_THAI_PHAN_ANH_TONE: Record<
     da_chuyen_ubnd: "blue",
     da_xu_ly: "green",
     dong: "gray",
+};
+
+export const HOUSE_STATUS_LABEL: Record<HouseStatus, string> = {
+    unverified: "Chưa xác thực",
+    pending: "Chờ duyệt",
+    verified: "Đã xác thực",
+    denied: "Từ chối",
+    locked: "Đã khóa",
+};
+
+export const HOUSE_STATUS_TONE: Record<
+    HouseStatus,
+    "gray" | "blue" | "yellow" | "green" | "red"
+> = {
+    unverified: "gray",
+    pending: "yellow",
+    verified: "green",
+    denied: "red",
+    locked: "gray",
 };
 
 export const LOAI_SO_HUU_LABEL: Record<LoaiSoHuu, string> = {

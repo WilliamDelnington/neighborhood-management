@@ -7,15 +7,31 @@ import {
     EmergencyContactBox,
     ContactInfoBox,
 } from "@components/home";
+import { hasPermission } from "@components/role";
 import { APP_UTINITIES, EMERGENCY_HOTLINES } from "@constants/utinities";
 import { fetchPublicAnnouncements } from "@service/announcementApi";
 import { LOAI_THONG_BAO_LABEL } from "@constants/domain";
 import { Announcement } from "@dts";
+import { useStore } from "@store";
 
 const HomePage: React.FunctionComponent = () => {
     const navigate = useNavigate();
+    const user = useStore(state => state.user);
+    const hasUnreadMeetingNotification = useStore(
+        state => state.hasUnreadMeetingNotification,
+    );
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const utinities = APP_UTINITIES.filter(
+        item =>
+            !item.requiredPermission ||
+            hasPermission(user, item.requiredPermission),
+    ).map(item => ({
+        ...item,
+        showBadge:
+            item.key === "meetings" ? hasUnreadMeetingNotification : undefined,
+    }));
 
     useEffect(() => {
         fetchPublicAnnouncements(1, 3)
@@ -35,7 +51,7 @@ const HomePage: React.FunctionComponent = () => {
                 address="Phường Dương Nội, TP Hà Nội"
             />
 
-            <Utinities utinities={APP_UTINITIES} />
+            <Utinities utinities={utinities} />
 
             <Box className="bg-white mt-2 p-4">
                 <Box

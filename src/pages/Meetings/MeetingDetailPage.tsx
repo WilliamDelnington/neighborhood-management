@@ -8,9 +8,11 @@ import { fetchMeetingDetail, registerMeeting } from "@service/meetingApi";
 import { DANG_KY_HOP_LABEL } from "@constants/domain";
 import { formatDateTime } from "@utils/date-time";
 import { DangKyHop, Meeting } from "@dts";
+import { useStore } from "@store";
 
 const MeetingDetailPage: React.FC = () => {
     const { id } = useParams();
+    const markMeetingsSeen = useStore(state => state.markMeetingsSeen);
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -28,6 +30,10 @@ const MeetingDetailPage: React.FC = () => {
     };
 
     useEffect(load, [id]);
+
+    useEffect(() => {
+        markMeetingsSeen();
+    }, [markMeetingsSeen]);
 
     return (
         <PageLayout id="meeting-detail-page" title="Chi tiết cuộc họp">

@@ -268,77 +268,81 @@ const AccountPageContent: React.FC = () => {
                     )}
                 </Box>
 
-                <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
-                    <Box
-                        flex
-                        justifyContent="space-between"
-                        alignItems="center"
-                        mb={changingPassword ? 2 : 0}
-                    >
-                        <Box>
-                            <Text.Title size="small">Bảo mật</Text.Title>
-                            <Text size="xxSmall" className="text-text_2">
-                                {user.phone
-                                    ? "Đăng nhập bằng số điện thoại + mật khẩu"
-                                    : "Đặt mật khẩu để có thể đăng nhập bằng số điện thoại"}
-                            </Text>
+                {import.meta.env.DEV && (
+                    <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
+                        <Box
+                            flex
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mb={changingPassword ? 2 : 0}
+                        >
+                            <Box>
+                                <Text.Title size="small">Bảo mật</Text.Title>
+                                <Text size="xxSmall" className="text-text_2">
+                                    {user.phone
+                                        ? "Đăng nhập bằng số điện thoại + mật khẩu"
+                                        : "Đặt mật khẩu để có thể đăng nhập bằng số điện thoại"}
+                                </Text>
+                            </Box>
+                            {!changingPassword && (
+                                <Text
+                                    size="xSmall"
+                                    className="text-main"
+                                    onClick={() => setChangingPassword(true)}
+                                >
+                                    Đặt mật khẩu
+                                </Text>
+                            )}
                         </Box>
-                        {!changingPassword && (
-                            <Text
-                                size="xSmall"
-                                className="text-main"
-                                onClick={() => setChangingPassword(true)}
-                            >
-                                Đặt mật khẩu
-                            </Text>
+
+                        {changingPassword && (
+                            <>
+                                <Box mt={3}>
+                                    <Input
+                                        type="password"
+                                        label="Mật khẩu mới"
+                                        value={newPassword}
+                                        onChange={e =>
+                                            setNewPassword(e.target.value)
+                                        }
+                                    />
+                                </Box>
+                                <Box mt={3}>
+                                    <Input
+                                        type="password"
+                                        label="Nhập lại mật khẩu mới"
+                                        value={confirmNewPassword}
+                                        onChange={e =>
+                                            setConfirmNewPassword(
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                </Box>
+                                <Box mt={4} flex style={{ gap: 8 }}>
+                                    <Button
+                                        variant="secondary"
+                                        fullWidth
+                                        onClick={() => {
+                                            setChangingPassword(false);
+                                            setNewPassword("");
+                                            setConfirmNewPassword("");
+                                        }}
+                                    >
+                                        Hủy
+                                    </Button>
+                                    <Button
+                                        fullWidth
+                                        loading={settingPassword}
+                                        onClick={handleSetPassword}
+                                    >
+                                        Lưu
+                                    </Button>
+                                </Box>
+                            </>
                         )}
                     </Box>
-
-                    {changingPassword && (
-                        <>
-                            <Box mt={3}>
-                                <Input
-                                    type="password"
-                                    label="Mật khẩu mới"
-                                    value={newPassword}
-                                    onChange={e =>
-                                        setNewPassword(e.target.value)
-                                    }
-                                />
-                            </Box>
-                            <Box mt={3}>
-                                <Input
-                                    type="password"
-                                    label="Nhập lại mật khẩu mới"
-                                    value={confirmNewPassword}
-                                    onChange={e =>
-                                        setConfirmNewPassword(e.target.value)
-                                    }
-                                />
-                            </Box>
-                            <Box mt={4} flex style={{ gap: 8 }}>
-                                <Button
-                                    variant="secondary"
-                                    fullWidth
-                                    onClick={() => {
-                                        setChangingPassword(false);
-                                        setNewPassword("");
-                                        setConfirmNewPassword("");
-                                    }}
-                                >
-                                    Hủy
-                                </Button>
-                                <Button
-                                    fullWidth
-                                    loading={settingPassword}
-                                    onClick={handleSetPassword}
-                                >
-                                    Lưu
-                                </Button>
-                            </Box>
-                        </>
-                    )}
-                </Box>
+                )}
 
                 <Box
                     className="bg-white rounded-2xl p-4 shadow-sm mt-3"

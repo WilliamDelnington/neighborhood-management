@@ -1,5 +1,11 @@
 import { API, DEFAULT_PAGE_SIZE } from "@constants/common";
-import { Complaint, ComplaintDetail, NhomPhanAnh, PaginatedData } from "@dts";
+import {
+    Complaint,
+    ComplaintDetail,
+    NhomPhanAnh,
+    PaginatedData,
+    TrangThaiPhanAnh,
+} from "@dts";
 import { request } from "./request";
 
 export interface CreateComplaintParams {
@@ -34,43 +40,27 @@ export const lookupComplaintByCode = (code: string): Promise<ComplaintDetail> =>
 export const fetchComplaintDetail = (id: string): Promise<ComplaintDetail> =>
     request<ComplaintDetail>("GET", `${API.COMPLAINTS}/${id}`);
 
-export interface ListComplaintsParams {
+export interface FetchComplaintsParams {
     page?: number;
     limit?: number;
-    status?: string;
-    category?: string;
+    status?: TrangThaiPhanAnh;
+    category?: NhomPhanAnh;
     search?: string;
 }
 
+/**
+ * Danh sach phan anh danh cho nhan vien (yeu cau quyen complaints.read).
+ * Backend tu gioi han theo cum phu trach / trang thai chuyen UBND (xem
+ * complaintScopeFilter trong quan-ly-to-dan-pho-hoa-binh-backend-app), nen
+ * khong can loc pham vi them o client.
+ */
 export const fetchComplaints = (
-    params: ListComplaintsParams,
+    params: FetchComplaintsParams = {},
 ): Promise<PaginatedData<Complaint>> =>
     request<PaginatedData<Complaint>>("GET", API.COMPLAINTS, {
-        page: params.page || 1,
-        limit: params.limit || DEFAULT_PAGE_SIZE,
+        page: params.page ?? 1,
+        limit: params.limit ?? DEFAULT_PAGE_SIZE,
         status: params.status,
         category: params.category,
         search: params.search,
-    });
-
-export interface UpdateComplaintStatusParams {
-    status: string;
-    note?: string;
-    isPublic?: boolean;
-}
-
-export const updateComplaintStatus = (
-    id: string,
-    params: UpdateComplaintStatusParams,
-): Promise<Complaint> =>
-    request<Complaint>("PATCH", `${API.COMPLAINTS}/${id}/status`, params);
-
-export const assignComplaint = (
-    id: string,
-    assigneeId: string,
-    expectedCompletionDate?: string,
-): Promise<Complaint> =>
-    request<Complaint>("PATCH", `${API.COMPLAINTS}/${id}/assign`, {
-        assigneeId,
-        expectedCompletionDate,
     });

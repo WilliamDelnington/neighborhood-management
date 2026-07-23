@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Box, Icon, Select, Text, useNavigate, useSnackbar } from "zmp-ui";
 import { PageLayout } from "@components/layout";
 import { Button, Input, TextArea } from "@components/customized";
-import { RequireAuth } from "@components/role";
+import { RequireAuth, hasPermission } from "@components/role";
 import { createComplaint } from "@service/complaintApi";
 import { NHOM_PHAN_ANH_LABEL } from "@constants/domain";
 import { Complaint, NhomPhanAnh } from "@dts";
+import { useStore } from "@store";
 
 const ComplaintCreatePage: React.FC = () => (
     <RequireAuth>
@@ -16,6 +17,8 @@ const ComplaintCreatePage: React.FC = () => (
 const ComplaintCreatePageContent: React.FC = () => {
     const navigate = useNavigate();
     const { openSnackbar } = useSnackbar();
+    const user = useStore(state => state.user);
+    const canCreate = hasPermission(user, "complaints.create");
 
     const [category, setCategory] = useState<NhomPhanAnh | undefined>();
     const [title, setTitle] = useState("");
@@ -23,6 +26,44 @@ const ComplaintCreatePageContent: React.FC = () => {
     const [area, setArea] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [created, setCreated] = useState<Complaint | null>(null);
+
+    if (!canCreate) {
+        return (
+            <PageLayout id="complaint-create-denied" title="Gửi phản ánh">
+                <Box
+                    flex
+                    flexDirection="column"
+                    alignItems="center"
+                    justifyContent="center"
+                    p={6}
+                    style={{ minHeight: "75vh" }}
+                >
+                    <Icon
+                        icon="zi-warning-solid"
+                        className="text-text_2"
+                        size={56}
+                    />
+                    <Text.Title size="normal" className="mt-4 text-center">
+                        Không có quyền thực hiện
+                    </Text.Title>
+                    <Text
+                        size="xSmall"
+                        className="text-text_2 mt-2 text-center"
+                    >
+                        Tài khoản của bạn không có quyền gửi phản ánh.
+                    </Text>
+                    <Box mt={6} style={{ width: "100%" }}>
+                        <Button
+                            fullWidth
+                            onClick={() => navigate("/", { animate: true })}
+                        >
+                            Về trang chủ
+                        </Button>
+                    </Box>
+                </Box>
+            </PageLayout>
+        );
+    }
 
     const handleSubmit = async () => {
         if (!category) {
