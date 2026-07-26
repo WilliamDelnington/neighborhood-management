@@ -28,6 +28,9 @@ export const API = {
     COMPLAINTS_MINE: "/api/complaints/mine",
     COMPLAINTS_LOOKUP: "/api/complaints/lookup",
 
+    SUPPORT_TICKETS: "/api/support-tickets",
+    SUPPORT_TICKETS_MINE: "/api/support-tickets/mine",
+
     ANNOUNCEMENTS: "/api/announcements",
     MEETINGS: "/api/meetings",
     SURVEYS: "/api/surveys",

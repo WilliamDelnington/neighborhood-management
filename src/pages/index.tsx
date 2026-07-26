@@ -17,6 +17,15 @@ const ComplaintDetailPage = lazy(
     () => import("./Complaints/ComplaintDetailPage"),
 );
 
+const SupportPage = lazy(() => import("./Support/SupportPage"));
+const SupportHowToUsePage = lazy(() => import("./Support/SupportHowToUsePage"));
+const SupportTicketCreatePage = lazy(
+    () => import("./Support/SupportTicketCreatePage"),
+);
+const SupportTicketDetailPage = lazy(
+    () => import("./Support/SupportTicketDetailPage"),
+);
+
 const AnnouncementListPage = lazy(
     () => import("./Announcements/AnnouncementListPage"),
 );
@@ -72,6 +81,24 @@ const Routes: React.FC = () => (
                 <Route
                     path="/complaints/:id"
                     element={<ComplaintDetailPage />}
+                />
+
+                <Route path="/support" element={<SupportPage />} />
+                <Route
+                    path="/support/how-to-use"
+                    element={<SupportHowToUsePage />}
+                />
+                <Route
+                    path="/support/report-bug"
+                    element={<SupportTicketCreatePage type="bao_loi" />}
+                />
+                <Route
+                    path="/support/feedback"
+                    element={<SupportTicketCreatePage type="gop_y" />}
+                />
+                <Route
+                    path="/support/tickets/:id"
+                    element={<SupportTicketDetailPage />}
                 />
 
                 <Route

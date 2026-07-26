@@ -376,6 +376,17 @@ const AccountPageContent: React.FC = () => {
                     </Box>
                 </Box>
 
+                <Box
+                    className="bg-white rounded-2xl p-4 shadow-sm mt-3"
+                    flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    onClick={() => navigate("/support", { animate: true })}
+                >
+                    <Text.Title size="small">Hỗ trợ</Text.Title>
+                    <Icon icon="zi-chevron-right" className="text-text_3" />
+                </Box>
+
                 <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
                     <Box
                         flex

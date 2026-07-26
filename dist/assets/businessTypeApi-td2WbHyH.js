@@ -1,0 +1,1 @@
+import{b as t,A as S}from"./index-DkVQl7dS.js";const c=(e={})=>{let s;return e.active!==void 0&&(s=e.active?"1":"0"),t("GET",S.BUSINESS_TYPES,{search:e.search,active:s,page:e.page??1,limit:e.limit??20})},E=e=>t("POST",S.BUSINESS_TYPES,e),T=(e,s)=>t("PATCH",`${S.BUSINESS_TYPES}/${e}`,s),n=e=>t("DELETE",`${S.BUSINESS_TYPES}/${e}`);export{E as c,n as d,c as f,T as u};

@@ -1,1 +1,0 @@
-import{r as s,A as o}from"./index-BRzG-Inz.js";const a=(e=!1)=>s("GET",o.SURVEYS,{openOnly:e?1:void 0},{useAuth:!1}),S=e=>s("GET",`${o.SURVEYS}/${e}`,void 0,{useAuth:!1}),u=(e,r)=>s("POST",`${o.SURVEYS}/${e}/respond`,{answers:r});export{S as a,a as f,u as r};

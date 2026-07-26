@@ -196,6 +196,32 @@ export type ComplaintDetail = {
 };
 
 // ---------------------------------------------------------------------------
+// Ho tro (Ho so ca nhan)
+// ---------------------------------------------------------------------------
+export type LoaiYeuCauHoTro = "bao_loi" | "gop_y";
+
+export type TrangThaiYeuCauHoTro = "moi" | "dang_xu_ly" | "da_xu_ly" | "dong";
+
+export type SupportTicket = {
+    _id: string;
+    code: string;
+    type: LoaiYeuCauHoTro;
+    title: string;
+    content: string;
+    images: string[];
+    deviceInfo?: string;
+    status: TrangThaiYeuCauHoTro;
+    createdByUserId:
+        | string
+        | { _id: string; displayName: string; phone?: string };
+    adminResponse?: string;
+    respondedByUserId?: string | { _id: string; displayName: string };
+    resolvedAt?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+// ---------------------------------------------------------------------------
 // Thong bao / cuoc hop / khao sat (mo rong khi cac module lien quan hoan tat)
 // ---------------------------------------------------------------------------
 export type LoaiThongBao =

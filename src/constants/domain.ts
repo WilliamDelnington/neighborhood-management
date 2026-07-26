@@ -6,11 +6,13 @@ import type {
     LoaiCuTru,
     LoaiSoHuu,
     LoaiThongBao,
+    LoaiYeuCauHoTro,
     MucDoAnNinh,
     MucNguyCoPccc,
     NhomPhanAnh,
     Role,
     TrangThaiPhanAnh,
+    TrangThaiYeuCauHoTro,
 } from "@dts";
 
 export const ROLE_LABEL: Record<Role, string> = {
@@ -51,6 +53,31 @@ export const TRANG_THAI_PHAN_ANH_TONE: Record<
     da_tiep_nhan: "blue",
     dang_xu_ly: "yellow",
     da_chuyen_ubnd: "blue",
+    da_xu_ly: "green",
+    dong: "gray",
+};
+
+export const LOAI_YEU_CAU_HO_TRO_LABEL: Record<LoaiYeuCauHoTro, string> = {
+    bao_loi: "Báo lỗi",
+    gop_y: "Góp ý",
+};
+
+export const TRANG_THAI_YEU_CAU_HO_TRO_LABEL: Record<
+    TrangThaiYeuCauHoTro,
+    string
+> = {
+    moi: "Mới",
+    dang_xu_ly: "Đang xử lý",
+    da_xu_ly: "Đã xử lý",
+    dong: "Đóng",
+};
+
+export const TRANG_THAI_YEU_CAU_HO_TRO_TONE: Record<
+    TrangThaiYeuCauHoTro,
+    "gray" | "blue" | "yellow" | "green" | "red"
+> = {
+    moi: "gray",
+    dang_xu_ly: "yellow",
     da_xu_ly: "green",
     dong: "gray",
 };

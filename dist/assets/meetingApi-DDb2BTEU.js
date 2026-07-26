@@ -1,1 +1,0 @@
-import{r as s,A as t}from"./index-BRzG-Inz.js";const o=(e=!1)=>s("GET",t.MEETINGS,{upcomingOnly:e?1:void 0},{useAuth:!1}),n=e=>s("GET",`${t.MEETINGS}/${e}`,void 0,{useAuth:!1}),E=(e,a,i)=>s("POST",`${t.MEETINGS}/${e}/register`,{answer:a,delegateName:i});export{n as a,o as f,E as r};
