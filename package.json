@@ -16,9 +16,11 @@
     ],
     "scripts": {
         "start": "zmp start",
+        "start:remote": "zmp start --mode remote",
         "deploy": "zmp deploy",
         "build:css": "postcss src/css/tailwind.css -o src/css/styles.css",
         "start:zalo": "zmp start --zalo-app --ios",
+        "start:zalo:remote": "zmp start --zalo-app --ios --mode remote",
         "prettier": "prettier \"**/*.+(js|json|ts)\"",
         "format": "npm run prettier -- --write",
         "lint": "eslint ./src --ext .js,.ts,.jsx,.tsx",
