@@ -1,0 +1,1 @@
+import{j as r,T as a}from"./vendor-zmp-C-z0RYEK.js";const g={gray:"bg-ng_10 text-text_2",blue:"bg-blue_10 text-main",yellow:"bg-amber-50 text-amber-600",green:"bg-green-50 text-green-600",red:"bg-red-50 text-red-600"},n=({label:e,tone:t="gray"})=>r(a,{size:"xxSmall",className:`inline-block px-2 py-1 rounded-full font-medium ${g[t]}`,children:e});export{n as S};

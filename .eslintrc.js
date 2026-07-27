@@ -9,6 +9,7 @@ module.exports = {
     extends: [
         "eslint:recommended",
         "plugin:react/recommended",
+        "plugin:react-hooks/recommended",
         "plugin:@typescript-eslint/recommended",
         "airbnb",
         "prettier",
@@ -40,6 +41,11 @@ module.exports = {
         "no-use-before-define": "off",
         "react/jsx-props-no-spreading": "off",
         "react/no-array-index-key": "warn",
+        // Du lieu tu MongoDB/API luon dung _id - khong the doi ten field nay
+        "no-underscore-dangle": ["error", { allow: ["_id"] }],
+        "no-restricted-syntax": "off",
+        "no-continue": "off",
+        "no-await-in-loop": "off",
     },
     settings: {
         "import/resolver": {

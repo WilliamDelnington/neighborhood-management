@@ -1,0 +1,1 @@
+import{b as s,A as o}from"./index-DkVQl7dS.js";const r=(e=!1)=>s("GET",o.SURVEYS,{openOnly:e?1:void 0},{useAuth:!1}),S=e=>s("GET",`${o.SURVEYS}/${e}`,void 0,{useAuth:!1}),u=(e,t)=>s("POST",`${o.SURVEYS}/${e}/respond`,{answers:t});export{S as a,r as f,u as r};

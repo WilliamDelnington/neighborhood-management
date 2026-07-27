@@ -1,6 +1,6 @@
 import { padWithLeadingZeros } from "./string";
 
-export const formatDate = (date: Date, format = "mm/dd/yyyy"): string => {
+export const formatDate = (date: Date, format = "dd/mm/yyyy"): string => {
     if (!date) {
         return "";
     }

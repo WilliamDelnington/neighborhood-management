@@ -1,19 +1,32 @@
 import {
     getUserInfo,
     getAccessToken,
+    getPhoneNumber as sdkGetPhoneNumber,
+    authorize as sdkAuthorize,
+    getSetting as sdkGetSetting,
+    openPermissionSetting as sdkOpenPermissionSetting,
+    requestSendNotification as sdkRequestSendNotification,
     followOA,
     openWebview,
     openMediaPicker,
-    saveImageToGallery,
+    openSMS as sdkOpenSMS,
+    openPhone as sdkOpenPhone,
+    showToast as sdkShowToast,
 } from "zmp-sdk";
-import { User } from "@dts";
 import { ImageType } from "zmp-ui/image-viewer";
 
-export const getZaloUserInfo = async (): Promise<User> => {
+export type ZaloProfile = {
+    id: string;
+    name: string;
+    avatar: string;
+    idByOA?: string;
+};
+
+export const getZaloUserInfo = async (): Promise<ZaloProfile> => {
     try {
         const user = await getUserInfo({ avatarType: "normal" });
         const { userInfo } = user;
-        return Promise.resolve(userInfo);
+        return Promise.resolve(userInfo as unknown as ZaloProfile);
     } catch (err) {
         return Promise.reject(err);
     }
@@ -21,11 +34,37 @@ export const getZaloUserInfo = async (): Promise<User> => {
 
 export const getToken = async (): Promise<string> => {
     try {
-        // "ACCESS_TOKEN" for development, remove it before deploy
-        const token = (await getAccessToken({})) || "ACCESS_TOKEN";
+        // "ZALO_SANDBOX_TOKEN" cho moi truong dev/ZMP dev tools khi chua co Zalo App that
+        const token = (await getAccessToken({})) || "ZALO_SANDBOX_TOKEN";
         return Promise.resolve(token);
     } catch (err) {
         return Promise.reject(err);
+    }
+};
+
+/**
+ * Xin quyen truy cap thong tin nguoi dung (scope.userInfo) truoc khi goi getUserInfo/getPhoneNumber
+ * o lan dau su dung, theo dung khuyen nghi cua Zalo Mini App.
+ */
+export const authorizeUserInfo = async (): Promise<boolean> => {
+    try {
+        const result = await sdkAuthorize({ scopes: ["scope.userInfo"] });
+        return Boolean(result?.["scope.userInfo"]);
+    } catch (err) {
+        return false;
+    }
+};
+
+/**
+ * Lay so dien thoai nguoi dung (can quyen scope.userPhonenumber, thuong yeu cau OA da lien ket).
+ * Tra ve undefined thay vi throw neu nguoi dung tu choi hoac chua du quyen.
+ */
+export const getPhoneNumber = async (): Promise<string | undefined> => {
+    try {
+        const res = await sdkGetPhoneNumber({});
+        return res?.token ? res.token : undefined;
+    } catch (err) {
+        return undefined;
     }
 };
 
@@ -51,12 +90,57 @@ export const openWebView = async (link: string): Promise<void> => {
     }
 };
 
-export const saveImage = async (img: string): Promise<void> => {
+export const openPhoneCall = (phoneNumber: string): void => {
+    sdkOpenPhone({
+        phoneNumber,
+        success: () => undefined,
+        fail: () => undefined,
+    });
+};
+
+export const openSmsCompose = (phoneNumber: string, content?: string): void => {
+    sdkOpenSMS({ phoneNumber, content } as any);
+};
+
+export const showToast = (message: string): void => {
+    sdkShowToast({ text: message } as any);
+};
+
+/**
+ * Kiem tra trang thai quyen thong bao hien tai cua Mini App.
+ */
+export const getNotificationSetting = async (): Promise<boolean> => {
     try {
-        await saveImageToGallery({ imageBase64Data: img });
-        return Promise.resolve();
+        const setting = await sdkGetSetting({});
+        return Boolean(
+            (setting as any)?.authSetting?.["scope.userNotification"],
+        );
     } catch (err) {
-        throw err;
+        return false;
+    }
+};
+
+/**
+ * Mo man hinh cai dat quyen cua Zalo khi nguoi dung da tu choi truoc do.
+ */
+export const openAppPermissionSetting = async (): Promise<void> => {
+    try {
+        await sdkOpenPermissionSetting({});
+    } catch (err) {
+        // Nguoi dung dong man hinh cai dat, khong can xu ly them
+    }
+};
+
+/**
+ * Xin quyen gui thong bao trong Mini App. Chi anh huong kenh in-app hien tai;
+ * kenh Zalo OA that su can them tich hop OA (xem notificationAdapters ben backend).
+ */
+export const requestNotificationPermission = async (): Promise<boolean> => {
+    try {
+        await sdkRequestSendNotification({});
+        return true;
+    } catch (err) {
+        return false;
     }
 };
 
@@ -82,7 +166,7 @@ export const pickImages = async (
             serverUploadUrl: params.serverUploadUrl,
         });
         const { data } = res;
-        const result = JSON.parse(data);
+        const result = JSON.parse(Array.isArray(data) ? data[0] : data);
         const { domain, images } = result.data as UploadImageResponse;
         const uploadedImgUrls = images.map(img => ({
             src: domain + img,

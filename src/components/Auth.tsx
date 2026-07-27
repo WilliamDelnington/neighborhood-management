@@ -2,14 +2,14 @@ import { useEffect } from "react";
 import { useStore } from "@store";
 
 const Auth = () => {
-    const [token, getToken] = useStore(state => [
+    const [token, bootstrapSession] = useStore(state => [
         state.token,
-        state.getAccessToken,
+        state.bootstrapSession,
     ]);
 
     useEffect(() => {
         if (!token) {
-            getToken();
+            bootstrapSession();
         }
     }, []);
 

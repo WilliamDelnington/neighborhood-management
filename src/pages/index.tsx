@@ -1,44 +1,145 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Route } from "react-router-dom";
-import { AnimationRoutes, ZMPRouter } from "zmp-ui";
+import { AnimationRoutes, Spinner, ZMPRouter } from "zmp-ui";
 
-import {
-    FeedbackPage,
-    FeedbackDetailPage,
-    CreateFeedbackPage,
-} from "./Feedback";
-import { GuidelinesPage } from "./Guidelines";
-import { HomePage } from "./Home";
-import { InformationGuidePage } from "./InformationGuide";
-import { CreateScheduleAppointmentPage } from "./CreateScheduleAppointment";
-import { AppointmentScheduleResultPage } from "./AppointmentScheduleResult";
-import { SearchPage } from "./Search";
-import { ProfilePage } from "./Profile";
+const HomePage = lazy(() => import("./Home/HomePage"));
+const LoginPage = lazy(() => import("./Login/LoginPage"));
+const AccountPage = lazy(() => import("./Account/AccountPage"));
+const EmergencyPage = lazy(() => import("./Emergency/EmergencyPage"));
+
+const ComplaintCreatePage = lazy(
+    () => import("./Complaints/ComplaintCreatePage"),
+);
+const ComplaintLookupPage = lazy(
+    () => import("./Complaints/ComplaintLookupPage"),
+);
+const ComplaintDetailPage = lazy(
+    () => import("./Complaints/ComplaintDetailPage"),
+);
+
+const SupportPage = lazy(() => import("./Support/SupportPage"));
+const SupportHowToUsePage = lazy(() => import("./Support/SupportHowToUsePage"));
+const SupportTicketCreatePage = lazy(
+    () => import("./Support/SupportTicketCreatePage"),
+);
+const SupportTicketDetailPage = lazy(
+    () => import("./Support/SupportTicketDetailPage"),
+);
+
+const AnnouncementListPage = lazy(
+    () => import("./Announcements/AnnouncementListPage"),
+);
+const AnnouncementDetailPage = lazy(
+    () => import("./Announcements/AnnouncementDetailPage"),
+);
+
+const NotificationsPage = lazy(
+    () => import("./Notifications/NotificationsPage"),
+);
+
+const MeetingListPage = lazy(() => import("./Meetings/MeetingListPage"));
+const MeetingDetailPage = lazy(() => import("./Meetings/MeetingDetailPage"));
+
+const SurveyListPage = lazy(() => import("./Surveys/SurveyListPage"));
+const SurveyDetailPage = lazy(() => import("./Surveys/SurveyDetailPage"));
+
+const FilesPage = lazy(() => import("./Files/FilesPage"));
+
+const AdminHomePage = lazy(() => import("./Admin/AdminHomePage"));
+const HouseholdListPage = lazy(() => import("./Admin/HouseholdListPage"));
+const HouseholdDetailPage = lazy(() => import("./Admin/HouseholdDetailPage"));
+const CitizenListPage = lazy(() => import("./Admin/CitizenListPage"));
+const CitizenDetailPage = lazy(() => import("./Admin/CitizenDetailPage"));
+const HouseListPage = lazy(() => import("./Admin/HouseListPage"));
+const HouseDetailPage = lazy(() => import("./Admin/HouseDetailPage"));
+const BusinessTypeListPage = lazy(() => import("./Admin/BusinessTypeListPage"));
+
+const RouteFallback = () => (
+    <div className="flex items-center justify-center h-screen">
+        <Spinner />
+    </div>
+);
 
 const Routes: React.FC = () => (
     <ZMPRouter>
-        <AnimationRoutes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/guidelines" element={<GuidelinesPage />} />
+        <Suspense fallback={<RouteFallback />}>
+            <AnimationRoutes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/emergency" element={<EmergencyPage />} />
 
-            <Route path="/feedbacks" element={<FeedbackPage />} />
-            <Route path="/feedbacks/:id" element={<FeedbackDetailPage />} />
-            <Route path="/create-feedback" element={<CreateFeedbackPage />} />
-            <Route
-                path="/create-schedule-appointment"
-                element={<CreateScheduleAppointmentPage />}
-            />
-            <Route
-                path="/schedule-appointment-result"
-                element={<AppointmentScheduleResultPage />}
-            />
-            <Route
-                path="/information-guide"
-                element={<InformationGuidePage />}
-            />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-        </AnimationRoutes>
+                <Route
+                    path="/complaints/create"
+                    element={<ComplaintCreatePage />}
+                />
+                <Route
+                    path="/complaints/lookup"
+                    element={<ComplaintLookupPage />}
+                />
+                <Route
+                    path="/complaints/:id"
+                    element={<ComplaintDetailPage />}
+                />
+
+                <Route path="/support" element={<SupportPage />} />
+                <Route
+                    path="/support/how-to-use"
+                    element={<SupportHowToUsePage />}
+                />
+                <Route
+                    path="/support/report-bug"
+                    element={<SupportTicketCreatePage type="bao_loi" />}
+                />
+                <Route
+                    path="/support/feedback"
+                    element={<SupportTicketCreatePage type="gop_y" />}
+                />
+                <Route
+                    path="/support/tickets/:id"
+                    element={<SupportTicketDetailPage />}
+                />
+
+                <Route
+                    path="/announcements"
+                    element={<AnnouncementListPage />}
+                />
+                <Route
+                    path="/announcements/:id"
+                    element={<AnnouncementDetailPage />}
+                />
+
+                <Route path="/meetings" element={<MeetingListPage />} />
+                <Route path="/meetings/:id" element={<MeetingDetailPage />} />
+
+                <Route path="/surveys" element={<SurveyListPage />} />
+                <Route path="/surveys/:id" element={<SurveyDetailPage />} />
+
+                <Route path="/files" element={<FilesPage />} />
+
+                <Route path="/admin" element={<AdminHomePage />} />
+                <Route
+                    path="/admin/households"
+                    element={<HouseholdListPage />}
+                />
+                <Route
+                    path="/admin/households/:id"
+                    element={<HouseholdDetailPage />}
+                />
+                <Route path="/admin/citizens" element={<CitizenListPage />} />
+                <Route
+                    path="/admin/citizens/:id"
+                    element={<CitizenDetailPage />}
+                />
+                <Route path="/admin/houses" element={<HouseListPage />} />
+                <Route path="/admin/houses/:id" element={<HouseDetailPage />} />
+                <Route
+                    path="/admin/business-types"
+                    element={<BusinessTypeListPage />}
+                />
+            </AnimationRoutes>
+        </Suspense>
     </ZMPRouter>
 );
 

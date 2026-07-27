@@ -1,8 +1,6 @@
 export { default as App } from "./app";
 export * from "./layout";
 export * from "./utilities";
-export * from "./oa";
-export * from "./news";
 export * from "./common";
 export * from "./customized";
 export * from "./collapse";
@@ -10,4 +8,5 @@ export { default as Auth } from "./Auth";
 export * from "./skeleton";
 export * from "./notifications/ErrorNotification";
 export * from "./date-picker";
-export * from "./image-upload";
+export * from "./role";
+export * from "./admin";

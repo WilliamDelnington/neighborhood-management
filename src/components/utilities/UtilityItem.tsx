@@ -9,11 +9,14 @@ import WithItem from "./WithItemClick";
 export interface UtinityItemProps {
     label?: string;
     icon?: React.ElementType<any>;
+    color?: string;
+    bgColor?: string;
     path?: string;
     onClick?: any;
     inDevelopment?: boolean;
     phoneNumber?: string;
     link?: string;
+    showBadge?: boolean;
     handleClickUtinity?: ({
         inDevelopment,
         path,
@@ -28,23 +31,31 @@ export interface UtinityItemProps {
 }
 
 const Wrapper = styled.div`
-    ${tw`flex flex-col items-center p-1 mb-2`};
-    width: calc(calc(50%) - 12px);
-    &:not(:nth-child(2n)) {
-        margin-right: 12px;
-    }
+    ${tw`flex flex-col items-center justify-center bg-white rounded-2xl`};
+    padding: 16px 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
 `;
-const IconWrapper = styled.div`
-    ${tw`rounded-2xl bg-icon_bg relative`};
-    width: 100%;
+const IconWrapper = styled.div<{ $bgColor?: string }>`
+    ${tw`rounded-full relative`};
+    background-color: ${({ $bgColor }) => $bgColor || "#F5F9FC"};
+    width: 56px;
+    height: 56px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    height: 95px;
 `;
 
 const CenterIcon = styled.div`
     ${tw`inline-block `};
+`;
+
+const Badge = styled.div`
+    ${tw`absolute bg-red-500 rounded-full`};
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
 `;
 
 const Label = styled(Text)`
@@ -53,7 +64,14 @@ const Label = styled(Text)`
 `;
 
 const UtinityItem: FunctionComponent<UtinityItemProps> = props => {
-    const { icon: Icon, label, handleClickUtinity } = props;
+    const {
+        icon: Icon,
+        label,
+        color,
+        bgColor,
+        showBadge,
+        handleClickUtinity,
+    } = props;
 
     const handleClick = (
         event: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -65,10 +83,11 @@ const UtinityItem: FunctionComponent<UtinityItemProps> = props => {
     return (
         <Wrapper onClick={handleClick}>
             {Icon && (
-                <IconWrapper>
+                <IconWrapper $bgColor={bgColor}>
                     <CenterIcon>
-                        <Icon />
+                        <Icon color={color} />
                     </CenterIcon>
+                    {showBadge && <Badge />}
                 </IconWrapper>
             )}
             <Label size="xxSmall">{label}</Label>

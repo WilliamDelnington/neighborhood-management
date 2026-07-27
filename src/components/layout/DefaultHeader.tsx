@@ -7,6 +7,7 @@ import Background from "@assets/header-background.png";
 export interface DefaultHeaderProps {
     title?: string;
     back?: boolean;
+    onBackClick?: (event: React.SyntheticEvent) => void;
 }
 
 const HeaderContainer = styled(Header)`
@@ -14,8 +15,8 @@ const HeaderContainer = styled(Header)`
     z-index: 1;
     background: linear-gradient(
             0deg,
-            rgba(4, 109, 214, 0.9),
-            rgba(4, 109, 214, 0.9)
+            rgba(37, 99, 235, 0.92),
+            rgba(37, 99, 235, 0.92)
         ),
         url(${Background});
     background-size: cover;
@@ -35,13 +36,14 @@ const HeaderContainer = styled(Header)`
 `;
 
 const DefaultHeader: FC<DefaultHeaderProps> = props => {
-    const { title, back } = props;
+    const { title, back, onBackClick } = props;
 
     return (
         <HeaderContainer
             title={title}
             backIcon={<Icon icon="zi-arrow-left" />}
             showBackIcon={back}
+            onBackClick={onBackClick}
         />
     );
 };

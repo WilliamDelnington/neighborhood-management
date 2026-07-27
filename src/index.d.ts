@@ -1,4 +1,9 @@
 declare module "*.jpg";
 declare module "*.png";
 declare module "*.pdf";
-declare let isBack: boolean;
+
+interface Window {
+    isBack?: boolean;
+    APP_ID?: string;
+    APP_CONFIG?: Record<string, unknown>;
+}
