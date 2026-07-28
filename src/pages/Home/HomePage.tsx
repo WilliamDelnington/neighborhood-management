@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Box, Text, useNavigate } from "zmp-ui";
 import { HomeHeader, AppBottomNav, PageLayout } from "@components/layout";
-import { Utinities } from "@components/utilities";
 import {
     HomeInfoBanner,
     EmergencyContactBox,
     ContactInfoBox,
+    FeaturesCard,
 } from "@components/home";
 import { hasPermission } from "@components/role";
-import { APP_UTINITIES, EMERGENCY_HOTLINES } from "@constants/utinities";
+import {
+    APP_UTINITIES,
+    MORE_FEATURES,
+    EMERGENCY_HOTLINES,
+} from "@constants/utinities";
 import { fetchPublicAnnouncements } from "@service/announcementApi";
 import { LOAI_THONG_BAO_LABEL } from "@constants/domain";
 import { Announcement } from "@dts";
@@ -23,15 +27,19 @@ const HomePage: React.FunctionComponent = () => {
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const utinities = APP_UTINITIES.filter(
-        item =>
-            !item.requiredPermission ||
-            hasPermission(user, item.requiredPermission),
-    ).map(item => ({
-        ...item,
-        showBadge:
-            item.key === "meetings" ? hasUnreadMeetingNotification : undefined,
-    }));
+    const features = [...APP_UTINITIES, ...MORE_FEATURES]
+        .filter(
+            item =>
+                !item.requiredPermission ||
+                hasPermission(user, item.requiredPermission),
+        )
+        .map(item => ({
+            ...item,
+            showBadge:
+                item.key === "meetings"
+                    ? hasUnreadMeetingNotification
+                    : undefined,
+        }));
 
     useEffect(() => {
         fetchPublicAnnouncements(1, 3)
@@ -51,7 +59,7 @@ const HomePage: React.FunctionComponent = () => {
                 address="Phường Dương Nội, TP Hà Nội"
             />
 
-            <Utinities utinities={utinities} />
+            <FeaturesCard features={features} />
 
             <Box className="bg-white mt-2 p-4">
                 <Box

@@ -15,8 +15,9 @@ export interface HousePickerSheetProps {
 
 /**
  * Sheet chon nha so, dung cho HouseholdForm gan hộ dân vao mot nha. Backend tu
- * gioi han danh sach theo ownerId (resident) hoac assignedClusters (nhan vien)
- * cua nguoi goi (xem houseScopeFilter), nen resident chi thay nha cua chinh minh.
+ * gioi han danh sach theo ownerId (house_owner) hoac assignedClusters (nhan
+ * vien) cua nguoi goi (xem houseScopeFilter), nen house_owner chi thay nha
+ * cua chinh minh.
  */
 const HousePickerSheet: React.FC<HousePickerSheetProps> = ({
     visible,

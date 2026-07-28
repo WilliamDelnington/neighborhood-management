@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Text, useNavigate } from "zmp-ui";
 import { PageLayout, AppBottomNav } from "@components/layout";
 import { ListRow } from "@components/admin";
-import { RequireAuth, hasPermission } from "@components/role";
+import { RequireAuth, hasPermission, hasAdminAccess } from "@components/role";
 import { useStore } from "@store";
 import { ADMIN_APP_URL } from "@constants/common";
 import { openWebView } from "@service/zalo";
@@ -16,7 +16,7 @@ const AdminHomePage: React.FC = () => (
 const AdminHomeContent: React.FC = () => {
     const navigate = useNavigate();
     const user = useStore(state => state.user);
-    const isResident = user?.primaryRole === "resident";
+    const isHouseOwner = user?.primaryRole === "house_owner";
 
     const canViewHouseholds = hasPermission(user, "households.read");
     const canViewCitizens = hasPermission(user, "citizens.read");
@@ -39,7 +39,7 @@ const AdminHomeContent: React.FC = () => {
                             <ListRow
                                 title="Danh sách nhà số"
                                 subtitle={
-                                    isResident
+                                    isHouseOwner
                                         ? "Nhà số của bạn"
                                         : "Nhà số trong cụm dân cư bạn phụ trách"
                                 }
@@ -54,7 +54,7 @@ const AdminHomeContent: React.FC = () => {
                             <ListRow
                                 title="Danh sách hộ dân"
                                 subtitle={
-                                    isResident
+                                    isHouseOwner
                                         ? "Hộ dân trong nhà của bạn"
                                         : "Thông tin các hộ dân trong tổ dân phố"
                                 }
@@ -69,7 +69,7 @@ const AdminHomeContent: React.FC = () => {
                             <ListRow
                                 title="Danh sách nhân khẩu"
                                 subtitle={
-                                    isResident
+                                    isHouseOwner
                                         ? "Nhân khẩu trong hộ của bạn"
                                         : "Thông tin nhân khẩu của từng hộ"
                                 }
@@ -109,7 +109,12 @@ const AdminHomeContent: React.FC = () => {
                     )}
             </Box>
 
-            {!!ADMIN_APP_URL && (
+            {/* Trang quan tri web yeu cau quyen "dashboard.read" (xem AdminGuard
+            trong admin-web-app/src/App.tsx) - house_owner khong co quyen nay
+            nen mo len se chi thay man hinh tu choi truy cap, khong co ich gi
+            cho ho. Chi hien lien ket cho cac vai tro nhan vien/admin thuc su
+            dung duoc trang do. */}
+            {!!ADMIN_APP_URL && hasAdminAccess(user) && (
                 <Box p={4}>
                     <Text
                         size="xSmall"

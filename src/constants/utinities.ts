@@ -53,6 +53,68 @@ export const APP_UTINITIES: Array<Utinity> = [
     },
 ];
 
+/**
+ * Danh sach tien ich mo rong hien trong the "Tien ich khac" tren Home - khac
+ * voi APP_UTINITIES (6 thao tac nhanh luon hien day du), danh sach nay co the
+ * dai hon 6 va Home chi hien 6 muc dau tien, an cac muc con lai sau nut
+ * "Xem them" (xem HomePage.tsx). Thu tu trong mang la thu tu uu tien hien thi
+ * (bien tap thu cong, khong dua tren so lieu su dung thuc te).
+ */
+export const MORE_FEATURES: Array<Utinity> = [
+    {
+        key: "admin-houses",
+        label: "Nhà số của tôi",
+        icon: Icon.HouseIcon,
+        color: "#0891B2",
+        bgColor: "#CFFAFE",
+        path: "/admin/houses",
+        requiredPermission: "houses.read",
+    },
+    {
+        key: "admin-households",
+        label: "Hộ dân",
+        icon: Icon.EnterpriseIcon,
+        color: "#C2410C",
+        bgColor: "#FFEDD5",
+        path: "/admin/households",
+        requiredPermission: "households.read",
+    },
+    {
+        key: "admin-citizens",
+        label: "Nhân khẩu",
+        icon: Icon.PersonalIcon,
+        color: "#0D9488",
+        bgColor: "#CCFBF1",
+        path: "/admin/citizens",
+        requiredPermission: "citizens.read",
+    },
+    {
+        key: "support",
+        label: "Hỗ trợ",
+        icon: Icon.HeadsetIcon,
+        color: "#4338CA",
+        bgColor: "#E0E7FF",
+        path: "/support",
+    },
+    {
+        key: "notifications",
+        label: "Thông báo của tôi",
+        icon: Icon.NotificationIcon,
+        color: "#CA8A04",
+        bgColor: "#FEF9C3",
+        path: "/notifications",
+    },
+    {
+        key: "admin-business-types",
+        label: "Loại hình kinh doanh",
+        icon: Icon.GlobeIcon,
+        color: "#6D28D9",
+        bgColor: "#EDE9FE",
+        path: "/admin/business-types",
+        requiredPermission: "business_types.read",
+    },
+];
+
 export const EMERGENCY_HOTLINES: Array<{
     key: string;
     label: string;

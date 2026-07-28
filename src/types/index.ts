@@ -24,7 +24,7 @@ export type AppError = {
 // Nguoi dung / vai tro
 // ---------------------------------------------------------------------------
 export type Role =
-    | "resident"
+    | "house_owner"
     | "neighborhood_leader"
     | "secretary"
     | "regional_police"

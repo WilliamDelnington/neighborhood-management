@@ -3,14 +3,9 @@ import { Box, Text, useLocation, useNavigate, useSnackbar } from "zmp-ui";
 import { PageLayout } from "@components/layout";
 import { Button, Input } from "@components/customized";
 import { useStore } from "@store";
-import { updateMyProfile } from "@service/authApi";
 import { ROLE_LABEL } from "@constants/domain";
-import { Household, Role } from "@dts";
+import { Role } from "@dts";
 import { isValidVietnamesePhone } from "@utils/string";
-import {
-    HouseholdPickerSheet,
-    NeighborhoodPickerSheet,
-} from "@components/household";
 import Logo from "@assets/logo.png";
 
 type PhoneAuthMode = "hidden" | "login" | "register";
@@ -42,26 +37,24 @@ const DEV_TEST_ACCOUNTS: { zaloUserId: string; name: string; role: Role }[] = [
         name: "Phạm Thị Cán Bộ UBND",
         role: "people_committee_official",
     },
-    { zaloUserId: "seed-resident", name: "Hoàng Văn Dân", role: "resident" },
+    {
+        zaloUserId: "seed-house-owner",
+        name: "Hoàng Văn Dân",
+        role: "house_owner",
+    },
 ];
 
 /**
  * Man hinh dang nhap: san pham chinh thuc chi dang nhap bang Zalo. Kenh dang nhap
  * bang so dien thoai + mat khau chi hien khi import.meta.env.DEV (build dev), dung
  * de test khi chua co tai khoan Zalo sandbox phu hop - khong duoc bat trong production.
- * Sau do la buoc hoan tat onboarding (dia chi) cho nguoi dung moi.
+ * Tai khoan moi da la house_owner day du quyen ngay tu dau (khong con buoc
+ * onboarding bat buoc) - dang ky nha so la viec lam sau, tu trang quan tri.
  */
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { openSnackbar } = useSnackbar();
-    const [address, setAddress] = useState("");
-    const [neighborhood, setNeighborhood] = useState<string | null>(null);
-    const [neighborhoodPickerVisible, setNeighborhoodPickerVisible] =
-        useState(false);
-    const [household, setHousehold] = useState<Household | null>(null);
-    const [householdPickerVisible, setHouseholdPickerVisible] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
 
     const [phoneAuthMode, setPhoneAuthMode] = useState<PhoneAuthMode>("hidden");
     const [phone, setPhone] = useState("");
@@ -71,39 +64,33 @@ const LoginPage: React.FC = () => {
 
     const [
         token,
-        user,
         bootstrapping,
         bootstrapError,
         bootstrapSession,
         loginAsTestUser,
         loginWithPhone,
         registerWithPhone,
-        refreshMe,
     ] = useStore(state => [
         state.token,
-        state.user,
         state.bootstrapping,
         state.bootstrapError,
         state.bootstrapSession,
         state.loginAsTestUser,
         state.loginWithPhone,
         state.registerWithPhone,
-        state.refreshMe,
     ]);
 
-    const needsOnboarding = !!user && !user.address;
-
     useEffect(() => {
-        // Sau khi dang nhap thanh cong (va da hoan tat onboarding neu can), dieu huong
-        // ve trang nguoi dung dinh vao ban dau (RequireAuth luu trong location.state.from)
-        // hoac trang chu - truoc day khong co redirect nao ca nen man hinh dang nhap
-        // "dung im" sau khi bam nut, trong nhu nut khong hoat dong.
-        if (token && !needsOnboarding) {
+        // Sau khi dang nhap thanh cong, dieu huong ve trang nguoi dung dinh vao
+        // ban dau (RequireAuth luu trong location.state.from) hoac trang chu -
+        // truoc day khong co redirect nao ca nen man hinh dang nhap "dung im"
+        // sau khi bam nut, trong nhu nut khong hoat dong.
+        if (token) {
             const from =
                 (location.state as { from?: string } | null)?.from || "/";
             navigate(from, { animate: true, replace: true });
         }
-    }, [token, needsOnboarding]);
+    }, [token]);
 
     const handleLogin = () => {
         bootstrapSession();
@@ -146,49 +133,6 @@ const LoginPage: React.FC = () => {
         }
     };
 
-    const handleSelectNeighborhood = (selected: string) => {
-        setNeighborhood(selected);
-        setHousehold(null);
-    };
-
-    const handleCompleteOnboarding = async () => {
-        if (!neighborhood) {
-            openSnackbar({ type: "error", text: "Vui lòng chọn tổ dân phố" });
-            return;
-        }
-        if (!household) {
-            openSnackbar({ type: "error", text: "Vui lòng chọn hộ khẩu" });
-            return;
-        }
-        if (!address.trim()) {
-            openSnackbar({ type: "error", text: "Vui lòng nhập địa chỉ" });
-            return;
-        }
-        try {
-            setSubmitting(true);
-            await updateMyProfile({
-                address: address.trim(),
-                householdId: household._id,
-            });
-            await refreshMe();
-            navigate("/", { animate: true });
-        } catch (err: any) {
-            openSnackbar({
-                type: "error",
-                text: err?.message || "Có lỗi xảy ra",
-            });
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const householdLabel = household
-        ? `${household.code} — ${household.address}`
-        : "Chọn hộ khẩu...";
-    const householdPlaceholder = neighborhood
-        ? householdLabel
-        : "Chọn tổ dân phố trước";
-
     return (
         <PageLayout
             id="login-page"
@@ -214,7 +158,7 @@ const LoginPage: React.FC = () => {
                     Phường Dương Nội, Hà Nội
                 </Text>
 
-                {!token && !needsOnboarding && (
+                {!token && (
                     <Button
                         fullWidth
                         loading={bootstrapping}
@@ -354,85 +298,6 @@ const LoginPage: React.FC = () => {
                                 </Button>
                             ))}
                         </Box>
-                    </Box>
-                )}
-
-                {needsOnboarding && (
-                    <Box className="bg-white rounded-2xl p-4 w-full mt-4">
-                        <Text.Title size="small">Hoàn tất thông tin</Text.Title>
-                        <Text size="xSmall" className="text-text_2 mb-3">
-                            Vui lòng chọn tổ dân phố, hộ khẩu và cho biết địa
-                            chỉ để tổ dân phố hỗ trợ tốt hơn.
-                        </Text>
-                        <Box mb={3}>
-                            <Text size="xSmall" className="text-text_2 mb-1">
-                                Tổ dân phố
-                            </Text>
-                            <Box
-                                className="bg-ng_10 rounded-lg px-3 py-2"
-                                onClick={() =>
-                                    setNeighborhoodPickerVisible(true)
-                                }
-                            >
-                                <Text
-                                    size="small"
-                                    className={
-                                        neighborhood ? "" : "text-text_3"
-                                    }
-                                >
-                                    {neighborhood || "Chọn tổ dân phố..."}
-                                </Text>
-                            </Box>
-                        </Box>
-                        <Box mb={3}>
-                            <Text size="xSmall" className="text-text_2 mb-1">
-                                Hộ khẩu
-                            </Text>
-                            <Box
-                                className={`rounded-lg px-3 py-2 ${
-                                    neighborhood
-                                        ? "bg-ng_10"
-                                        : "bg-ng_10 opacity-50"
-                                }`}
-                                onClick={() =>
-                                    neighborhood &&
-                                    setHouseholdPickerVisible(true)
-                                }
-                            >
-                                <Text
-                                    size="small"
-                                    className={household ? "" : "text-text_3"}
-                                >
-                                    {householdPlaceholder}
-                                </Text>
-                            </Box>
-                        </Box>
-                        <Input
-                            label="Địa chỉ"
-                            placeholder="Số nhà, ngõ, cụm dân cư..."
-                            value={address}
-                            onChange={e => setAddress(e.target.value)}
-                        />
-                        <Box mt={4}>
-                            <Button
-                                fullWidth
-                                loading={submitting}
-                                onClick={handleCompleteOnboarding}
-                            >
-                                Hoàn tất
-                            </Button>
-                        </Box>
-                        <NeighborhoodPickerSheet
-                            visible={neighborhoodPickerVisible}
-                            onClose={() => setNeighborhoodPickerVisible(false)}
-                            onSelect={handleSelectNeighborhood}
-                        />
-                        <HouseholdPickerSheet
-                            visible={householdPickerVisible}
-                            cluster={neighborhood || undefined}
-                            onClose={() => setHouseholdPickerVisible(false)}
-                            onSelect={setHousehold}
-                        />
                     </Box>
                 )}
             </Box>

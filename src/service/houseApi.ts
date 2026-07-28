@@ -3,8 +3,8 @@ import { Business, Household, House, HouseStatus, PaginatedData } from "@dts";
 import { request } from "./request";
 
 /**
- * Yeu cau quyen houses.read. Backend tu gioi han theo ownerId (resident) hoac
- * assignedClusters (nhan vien) cua nguoi goi (xem houseScopeFilter trong
+ * Yeu cau quyen houses.read. Backend tu gioi han theo ownerId (house_owner)
+ * hoac assignedClusters (nhan vien) cua nguoi goi (xem houseScopeFilter trong
  * quan-ly-to-dan-pho-hoa-binh-backend-app), nen khong can loc them o client.
  */
 export const fetchHouses = (params: {
