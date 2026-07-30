@@ -835,3 +835,162 @@ The implementation is complete when:
 -   Security rules are enforced server-side.
 -   No protected admin/resident data leaks across roles.
 -   Lint, typecheck, and build pass, or remaining failures are documented with exact file paths and fixes.
+
+## Business Registration and Document Verification
+
+Add a dynamic business-document workflow for household owners. The workflow
+must not hard-code the documents required by a business category: administrators
+configure a reusable document catalog and a per-business-type requirement matrix.
+
+### Role terminology and permissions
+
+For this module, `house_owner` means a `resident` account that is the owner of,
+or has been explicitly delegated to manage, the household/business concerned.
+Do not introduce a second, conflicting authentication role. Resolve this through
+the user's household/business scope and permissions.
+
+| Role                        | Permission in this module                                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `admin`                     | Manage document types; configure document rules for each business type; view all records and audit history.                                      |
+| `house_owner`               | Register and manage only their authorized businesses; view requirements; upload and replace supporting documents; view review feedback.          |
+| `people_committee_official` | Review common legal documents such as business registration and food-safety documents; approve or request supplementation within assigned scope. |
+| `regional_police`           | Review police-owned/specialized documents such as security commitments and fire-safety documents within assigned scope.                          |
+| `neighborhood_leader`       | View-only list and verification progress for businesses in assigned clusters; never approve or access files outside scope.                       |
+| `secretary`                 | View-only aggregate dashboard and permitted progress reports; never approve documents.                                                           |
+
+Every server-side review action must enforce both role and assigned scope. Hiding
+an approval button in the UI is not authorization.
+
+### Data model
+
+Add the following Mongoose models with strict TypeScript types, timestamps,
+indexes, and Zod validation at API boundaries:
+
+-   `DocumentType`: `name`, unique `code`, `description`, `hasIssueDate`,
+    `hasExpiryDate`, `active`, `createdBy`, `updatedBy`. This is the master legal
+    document catalog.
+-   `BusinessType`: `name`, `description`, `active`, `sortOrder`, and
+    `requiredDocuments`. Each rule contains `documentTypeId`, `isRequired`,
+    `warningBeforeDays`, and an optional `reviewerRoles` list when a document must
+    be reviewed by a particular authority.
+-   `Business`: household/business-owner relationship, business type, address or
+    cluster, and status: `unverified`, `pending_approval`, `need_supplement`, or
+    `verified`.
+-   `BusinessDocument`: `businessId`, `documentTypeId`, `fileAssetId`, optional
+    `docNumber`, `issueDate`, `expiryDate`, status (`pending`, `approved`,
+    `rejected`), `rejectionReason`, `uploadedBy`, `reviewedBy`, and
+    `reviewedAt`. Preserve each submission as a version or retain its historical
+    file reference; never erase an earlier uploaded file merely because a resident
+    replaces it.
+
+Continue to use the existing `FileAsset` collection as the single source of
+truth for physical file metadata and storage. A business document stores only a
+reference to `FileAsset`; it must not duplicate URLs or binary content.
+
+Use unique/index constraints appropriate for lookups, including `DocumentType`
+code, `BusinessDocument.businessId`, `BusinessDocument.documentTypeId`, and
+business status/cluster. Enforce one active submission per
+business-document-type while retaining prior versions for auditability.
+
+### Resident and official workflow
+
+1. A house owner creates or selects a business; its initial status is
+   `unverified`.
+2. The app reads `BusinessType.requiredDocuments` and renders the required and
+   optional upload form dynamically.
+3. The owner uploads the physical file through the normal file-upload endpoint.
+   The server creates a `FileAsset`, validates its type, size, ownership, and
+   intended related model, then accepts its ID in the business-document request.
+4. The service creates a new `BusinessDocument` version or changes the active
+   reference to the newly uploaded asset. Once there is a submission to review,
+   the business becomes `pending_approval`.
+5. An authorized official reviews each document and either approves it or
+   requests supplementation with a clear Vietnamese rejection reason. A rejected
+   document moves the business to `need_supplement` and creates an in-app
+   notification; design the notification event so a future Zalo OA/ZNS adapter
+   can deliver it without changing business logic.
+6. A business becomes `verified` only after every required document is present,
+   valid, and approved by the authority required by its rule. Optional documents
+   cannot block verification. Re-open verification if an approved required
+   document expires or is superseded.
+
+### Required API surface
+
+Keep the common `ApiResponse<T>` format and add the following routes. Use the
+project's actual App Router route structure while preserving these semantics:
+
+-   `GET/POST/PATCH /api/document-types` and `DELETE /api/document-types/:id` —
+    admin only; reject deletion when a type is referenced, or safely deactivate it
+    instead.
+-   `GET/POST/PATCH /api/business-types` — admin only.
+-   `PUT /api/business-types/:id/document-rules` — admin only; replace the rules
+    atomically after validating every document type exists and is active.
+-   `GET /api/businesses/:businessId/required-documents` — authorized owner or
+    scoped reviewer. Return the merged requirement matrix, active submission,
+    review state, safe file metadata, and missing/expired state.
+-   `POST /api/businesses/:businessId/documents` — authorized owner only. Accept
+    `documentTypeId`, `fileAssetId`, and optional document number/issue/expiry
+    dates. Verify the asset exists, belongs to the caller's upload session, and is
+    compatible with the business before creating the reference.
+-   `PUT /api/businesses/:businessId/documents/:documentId/review` — only the
+    reviewer role declared by the document rule (or admin). Accept an approval
+    decision and require a rejection reason when rejected.
+-   `GET /api/businesses` and `GET /api/businesses/:id` — apply household,
+    business, and cluster scope filters before querying. Support pagination and
+    status/type search for authorized operational users.
+
+Use transactions for upload-to-document-to-business-state updates where the
+deployment supports MongoDB transactions. Otherwise implement an idempotent
+service operation with compensating cleanup that never leaves a dangling
+`BusinessDocument.fileAssetId` reference.
+
+### Security, privacy, and audit
+
+-   Check ownership by the business owner or an explicit household-management
+    delegation, not a client-supplied user ID.
+-   File-preview/download endpoints must require the same ownership or reviewer
+    scope as the document itself. Do not expose raw storage URLs for protected
+    documents; issue authorized, short-lived access where supported by storage.
+-   Allow only explicitly configured document MIME types and sizes; scan or queue
+    files for scanning when the selected storage implementation supports it.
+-   Record `UPDATE_BUSINESS_DOCUMENT_RULES`, document upload/replacement,
+    approve/reject, business-status transitions, and any file-access-sensitive
+    action in `AuditLog`, including actor, target, timestamp, prior state, and
+    resulting state. Do not log document contents or secrets.
+-   An expired `FileAsset` association, missing asset, inactive document type, or
+    cross-business asset ID must fail validation with a useful Vietnamese error.
+
+### UI and Mini App experience
+
+The resident app must provide a compact mobile-first "Hộ kinh doanh" area:
+
+-   business type selection and a dynamic checklist showing required, optional,
+    uploaded, pending, approved, rejected, and expiring documents;
+-   camera/gallery/file upload with progress, retry, validation errors, and a
+    clear replacement flow that preserves review history;
+-   status timeline and Vietnamese reviewer feedback; and
+-   no access to internal reviewer notes or documents from other households.
+
+Official/admin screens must provide filterable lists, per-document preview,
+approve/request-supplement actions with mandatory reason on rejection, clear
+overall verification status, and audit visibility. `neighborhood_leader` and
+`secretary` screens are explicitly read-only; approval controls and their API
+permissions must be absent.
+
+### Tests and acceptance criteria for this module
+
+Add unit/API coverage for document-rule validation, household ownership and
+cluster scope, reviewer-role guards, file-asset reference validation, document
+replacement history, and the rule that only all-approved required documents
+verify a business. Verify at minimum that:
+
+-   adding a required document to a restaurant business type immediately appears
+    in the owner's dynamic checklist;
+-   a successful owner upload creates a `FileAsset` and a valid
+    `BusinessDocument` reference;
+-   a neighborhood leader receives `403 Forbidden` for a review request even when
+    calling the endpoint directly;
+-   a rejection changes the business to `need_supplement` and notifies the owner;
+    and
+-   a business cannot become `verified` until every required document has been
+    approved by its authorized reviewer.

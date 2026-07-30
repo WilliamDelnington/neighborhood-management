@@ -31,22 +31,26 @@ import {
     isBusinessFormValid,
     toBusinessInput,
 } from "@components/business";
+import { AttachmentUploader } from "@components/attachments";
 import { useStore } from "@store";
-import { HOUSE_STATUS_LABEL, HOUSE_STATUS_TONE } from "@constants/domain";
+import {
+    BUSINESS_STATUS_LABEL,
+    BUSINESS_STATUS_TONE,
+    HOUSE_STATUS_LABEL,
+    HOUSE_STATUS_TONE,
+} from "@constants/domain";
 import { AppError, Business, House, HouseStatus, Household } from "@dts";
 import {
     deleteHouse,
+    fetchHouseAttachments,
     fetchHouseBusinesses,
     fetchHouseById,
     fetchHouseHouseholds,
+    deleteHouseAttachment,
     updateHouse,
     updateHouseStatus,
 } from "@service/houseApi";
-import {
-    createBusiness,
-    deleteBusiness,
-    updateBusiness,
-} from "@service/businessApi";
+import { createBusiness } from "@service/businessApi";
 
 const toFormValues = (h: House): HouseFormValues => ({
     cluster: h.cluster,
@@ -76,8 +80,6 @@ const HouseDetailContent: React.FC = () => {
     const canViewHouseholds = hasPermission(user, "households.read");
     const canViewBusinesses = hasPermission(user, "businesses.read");
     const canCreateBusiness = hasPermission(user, "businesses.create");
-    const canUpdateBusiness = hasPermission(user, "businesses.update");
-    const canDeleteBusiness = hasPermission(user, "businesses.delete");
 
     const [house, setHouse] = useState<House | null>(null);
     const [loading, setLoading] = useState(true);
@@ -96,9 +98,6 @@ const HouseDetailContent: React.FC = () => {
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const [businessesLoading, setBusinessesLoading] = useState(true);
     const [businessSheetVisible, setBusinessSheetVisible] = useState(false);
-    const [editingBusiness, setEditingBusiness] = useState<Business | null>(
-        null,
-    );
     const [businessForm, setBusinessForm] =
         useState<BusinessFormValues>(EMPTY_BUSINESS_FORM);
     const [businessSubmitting, setBusinessSubmitting] = useState(false);
@@ -203,32 +202,15 @@ const HouseDetailContent: React.FC = () => {
     };
 
     const openCreateBusiness = () => {
-        setEditingBusiness(null);
         setBusinessForm(EMPTY_BUSINESS_FORM);
         setBusinessSheetVisible(true);
     };
 
-    const openEditBusiness = (business: Business) => {
-        const typeLabel =
-            business.businessType && typeof business.businessType === "object"
-                ? business.businessType.name
-                : "";
-        setEditingBusiness(business);
-        setBusinessForm({
-            name: business.name,
-            ownerName: business.ownerName || "",
-            phone: business.phone || "",
-            active: business.active,
-            businessTypeId:
-                typeof business.businessType === "object"
-                    ? business.businessType._id
-                    : business.businessType || "",
-            businessTypeLabel: typeLabel,
-            note: business.note || "",
-        });
-        setBusinessSheetVisible(true);
-    };
-
+    // Sua/xoa mot ho kinh doanh da co gio chuyen sang man chi tiet rieng
+    // (/admin/businesses/:id, xem BusinessDetailPage) - can du cho de hien
+    // trang thai xac thuc + tai lieu dinh kem, khong con hop ly trong mot
+    // Sheet nho. Sheet o day chi con dung de tao moi (houseId co san tu ngu
+    // canh trang nay).
     const handleSaveBusiness = async () => {
         if (!isBusinessFormValid(businessForm)) {
             openSnackbar({
@@ -239,37 +221,8 @@ const HouseDetailContent: React.FC = () => {
         }
         try {
             setBusinessSubmitting(true);
-            if (editingBusiness) {
-                await updateBusiness(
-                    editingBusiness._id,
-                    toBusinessInput(businessForm, id),
-                );
-                openSnackbar({
-                    type: "success",
-                    text: "Đã cập nhật hộ kinh doanh",
-                });
-            } else {
-                await createBusiness(toBusinessInput(businessForm, id));
-                openSnackbar({
-                    type: "success",
-                    text: "Đã thêm hộ kinh doanh",
-                });
-            }
-            setBusinessSheetVisible(false);
-            loadBusinesses();
-        } catch (err) {
-            openSnackbar({ type: "error", text: (err as AppError).message });
-        } finally {
-            setBusinessSubmitting(false);
-        }
-    };
-
-    const handleDeleteBusiness = async () => {
-        if (!editingBusiness) return;
-        try {
-            setBusinessSubmitting(true);
-            await deleteBusiness(editingBusiness._id);
-            openSnackbar({ type: "success", text: "Đã xóa hộ kinh doanh" });
+            await createBusiness(toBusinessInput(businessForm, id));
+            openSnackbar({ type: "success", text: "Đã thêm hộ kinh doanh" });
             setBusinessSheetVisible(false);
             loadBusinesses();
         } catch (err) {
@@ -437,6 +390,15 @@ const HouseDetailContent: React.FC = () => {
                             )}
                         </Box>
 
+                        <AttachmentUploader
+                            relatedModel="HouseRecord"
+                            relatedId={id}
+                            canUpload={isOwner || canUpdate || canVerify}
+                            canDelete={canUpdate || canVerify}
+                            fetchAttachments={fetchHouseAttachments}
+                            deleteAttachmentFn={deleteHouseAttachment}
+                        />
+
                         {canViewHouseholds && (
                             <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
                                 <Text.Title size="small" className="mb-2">
@@ -499,21 +461,22 @@ const HouseDetailContent: React.FC = () => {
                                             right={
                                                 <StatusBadge
                                                     label={
-                                                        b.active
-                                                            ? "Hoạt động"
-                                                            : "Vô hiệu"
+                                                        BUSINESS_STATUS_LABEL[
+                                                            b.status
+                                                        ]
                                                     }
                                                     tone={
-                                                        b.active
-                                                            ? "green"
-                                                            : "gray"
+                                                        BUSINESS_STATUS_TONE[
+                                                            b.status
+                                                        ]
                                                     }
                                                 />
                                             }
-                                            onClick={
-                                                canUpdateBusiness
-                                                    ? () => openEditBusiness(b)
-                                                    : undefined
+                                            onClick={() =>
+                                                navigate(
+                                                    `/admin/businesses/${b._id}`,
+                                                    { animate: true },
+                                                )
                                             }
                                         />
                                     ))}
@@ -548,11 +511,7 @@ const HouseDetailContent: React.FC = () => {
             <Sheet
                 visible={businessSheetVisible}
                 onClose={() => setBusinessSheetVisible(false)}
-                title={
-                    editingBusiness
-                        ? "Chỉnh sửa hộ kinh doanh"
-                        : "Thêm hộ kinh doanh"
-                }
+                title="Thêm hộ kinh doanh"
                 height="85vh"
                 autoHeight={false}
             >
@@ -571,17 +530,6 @@ const HouseDetailContent: React.FC = () => {
                         />
                     </Box>
                     <Box mt={3} flex style={{ gap: 8 }}>
-                        {editingBusiness && canDeleteBusiness && (
-                            <Button
-                                variant="secondary"
-                                fullWidth
-                                className="!bg-red-500 !text-white"
-                                loading={businessSubmitting}
-                                onClick={handleDeleteBusiness}
-                            >
-                                Xóa
-                            </Button>
-                        )}
                         <Button
                             fullWidth
                             loading={businessSubmitting}

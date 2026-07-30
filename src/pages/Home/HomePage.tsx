@@ -14,7 +14,11 @@ import {
     EMERGENCY_HOTLINES,
 } from "@constants/utinities";
 import { fetchPublicAnnouncements } from "@service/announcementApi";
-import { LOAI_THONG_BAO_LABEL } from "@constants/domain";
+import {
+    LOAI_THONG_BAO_LABEL,
+    APP_NAME_DEFAULT,
+    APP_NAME_HOUSE_OWNER,
+} from "@constants/domain";
 import { Announcement } from "@dts";
 import { useStore } from "@store";
 
@@ -26,6 +30,11 @@ const HomePage: React.FunctionComponent = () => {
     );
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const appName =
+        user?.primaryRole === "house_owner"
+            ? APP_NAME_HOUSE_OWNER
+            : APP_NAME_DEFAULT;
 
     const features = [...APP_UTINITIES, ...MORE_FEATURES]
         .filter(
@@ -51,11 +60,11 @@ const HomePage: React.FunctionComponent = () => {
     return (
         <PageLayout
             id="home-page"
-            customHeader={<HomeHeader title="Tổ dân phố Hòa Bình" />}
+            customHeader={<HomeHeader title={appName} />}
             bottomNav={<AppBottomNav />}
         >
             <HomeInfoBanner
-                title="Tổ dân phố Hòa Bình"
+                title={appName}
                 address="Phường Dương Nội, TP Hà Nội"
             />
 
@@ -112,7 +121,7 @@ const HomePage: React.FunctionComponent = () => {
 
             <ContactInfoBox
                 title="Thông tin liên hệ tổ dân phố"
-                description="Tổ trưởng tổ dân phố Hòa Bình, phường Dương Nội, TP Hà Nội"
+                description="Tổ trưởng tổ dân phố, phường Dương Nội, TP Hà Nội"
             />
         </PageLayout>
     );

@@ -3,7 +3,7 @@ import { Box, Text, useLocation, useNavigate, useSnackbar } from "zmp-ui";
 import { PageLayout } from "@components/layout";
 import { Button, Input } from "@components/customized";
 import { useStore } from "@store";
-import { ROLE_LABEL } from "@constants/domain";
+import { ROLE_LABEL, APP_NAME_DEFAULT } from "@constants/domain";
 import { Role } from "@dts";
 import { isValidVietnamesePhone } from "@utils/string";
 import Logo from "@assets/logo.png";
@@ -152,7 +152,7 @@ const LoginPage: React.FC = () => {
                     size="large"
                     className="text-white mt-4 text-center"
                 >
-                    Tổ dân phố Hòa Bình
+                    {APP_NAME_DEFAULT}
                 </Text.Title>
                 <Text size="small" className="text-wth_a70 mb-8 text-center">
                     Phường Dương Nội, Hà Nội

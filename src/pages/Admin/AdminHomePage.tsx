@@ -22,6 +22,7 @@ const AdminHomeContent: React.FC = () => {
     const canViewCitizens = hasPermission(user, "citizens.read");
     const canViewHouses = hasPermission(user, "houses.read");
     const canViewBusinessTypes = hasPermission(user, "business_types.read");
+    const canViewBusinesses = hasPermission(user, "businesses.read");
 
     return (
         <PageLayout
@@ -33,7 +34,8 @@ const AdminHomeContent: React.FC = () => {
                 {(canViewHouseholds ||
                     canViewCitizens ||
                     canViewHouses ||
-                    canViewBusinessTypes) && (
+                    canViewBusinessTypes ||
+                    canViewBusinesses) && (
                     <Box px={4}>
                         {canViewHouses && (
                             <ListRow
@@ -80,6 +82,21 @@ const AdminHomeContent: React.FC = () => {
                                 }
                             />
                         )}
+                        {canViewBusinesses && (
+                            <ListRow
+                                title="Danh sách hộ kinh doanh"
+                                subtitle={
+                                    isHouseOwner
+                                        ? "Hộ kinh doanh trong nhà của bạn"
+                                        : "Hộ kinh doanh trong tổ dân phố"
+                                }
+                                onClick={() =>
+                                    navigate("/admin/businesses", {
+                                        animate: true,
+                                    })
+                                }
+                            />
+                        )}
                         {canViewBusinessTypes && (
                             <ListRow
                                 title="Danh sách loại hình kinh doanh"
@@ -96,7 +113,8 @@ const AdminHomeContent: React.FC = () => {
                 {!canViewHouseholds &&
                     !canViewCitizens &&
                     !canViewHouses &&
-                    !canViewBusinessTypes && (
+                    !canViewBusinessTypes &&
+                    !canViewBusinesses && (
                         <Box p={6}>
                             <Text
                                 size="small"

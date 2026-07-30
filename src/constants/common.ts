@@ -41,6 +41,9 @@ export const API = {
 
     FILES: "/api/files",
     SETTINGS: "/api/settings",
+
+    UPLOADS_TOKEN: "/api/uploads/token",
+    UPLOADS_ATTACHMENTS: "/api/uploads/attachments",
 };
 
 export const SEARCH_NOT_FOUND = "Không tìm thấy thông tin";

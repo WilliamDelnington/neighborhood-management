@@ -18,7 +18,9 @@ const AppBottomNav: React.FC = () => {
     const canViewSections =
         hasPermission(user, "houses.read") ||
         hasPermission(user, "households.read") ||
-        hasPermission(user, "citizens.read");
+        hasPermission(user, "citizens.read") ||
+        hasPermission(user, "businesses.read") ||
+        hasPermission(user, "business_types.read");
 
     const activeKey = (() => {
         if (pathname === "/") return "home";

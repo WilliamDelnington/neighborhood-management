@@ -1,4 +1,6 @@
 import type {
+    BusinessDocumentStatus,
+    BusinessStatus,
     DangKyHop,
     GioiTinh,
     HouseStatus,
@@ -23,6 +25,15 @@ export const ROLE_LABEL: Record<Role, string> = {
     people_committee_official: "Cán bộ UBND",
     admin: "Quản trị viên",
 };
+
+/**
+ * Ten hien thi cua ung dung tren man hinh chinh - doi theo vai tro dang nhap:
+ * house_owner (quan ly nha/ho dan/nhan khau cua rieng minh) thay vi nhan vien/
+ * admin (quan ly toan bo to dan pho). Dung khi chua dang nhap hoac vai tro
+ * khac house_owner.
+ */
+export const APP_NAME_DEFAULT = "Quản lý tổ dân phố";
+export const APP_NAME_HOUSE_OWNER = "Quản lý nhà số";
 
 export const NHOM_PHAN_ANH_LABEL: Record<NhomPhanAnh, string> = {
     an_ninh_trat_tu: "An ninh trật tự",
@@ -99,6 +110,44 @@ export const HOUSE_STATUS_TONE: Record<
     verified: "green",
     denied: "red",
     locked: "gray",
+};
+
+// Trang thai xac thuc ho kinh doanh - tinh tu ket qua duyet tung giay to bat
+// buoc (xem @dts BusinessStatus). Khac HouseStatus (khong con "pending"/
+// "denied"/"locked" ma thay bang "pending_approval"/"need_supplement").
+export const BUSINESS_STATUS_LABEL: Record<BusinessStatus, string> = {
+    unverified: "Chưa xác thực",
+    pending_approval: "Đang chờ duyệt",
+    need_supplement: "Cần bổ sung hồ sơ",
+    verified: "Đã xác thực",
+};
+
+export const BUSINESS_STATUS_TONE: Record<
+    BusinessStatus,
+    "gray" | "blue" | "yellow" | "green" | "red"
+> = {
+    unverified: "gray",
+    pending_approval: "yellow",
+    need_supplement: "red",
+    verified: "green",
+};
+
+export const BUSINESS_DOCUMENT_STATUS_LABEL: Record<
+    BusinessDocumentStatus,
+    string
+> = {
+    pending: "Chờ duyệt",
+    approved: "Đã duyệt",
+    rejected: "Bị từ chối, cần bổ sung",
+};
+
+export const BUSINESS_DOCUMENT_STATUS_TONE: Record<
+    BusinessDocumentStatus,
+    "gray" | "blue" | "yellow" | "green" | "red"
+> = {
+    pending: "yellow",
+    approved: "green",
+    rejected: "red",
 };
 
 export const LOAI_SO_HUU_LABEL: Record<LoaiSoHuu, string> = {

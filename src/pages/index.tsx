@@ -53,6 +53,8 @@ const CitizenDetailPage = lazy(() => import("./Admin/CitizenDetailPage"));
 const HouseListPage = lazy(() => import("./Admin/HouseListPage"));
 const HouseDetailPage = lazy(() => import("./Admin/HouseDetailPage"));
 const BusinessTypeListPage = lazy(() => import("./Admin/BusinessTypeListPage"));
+const BusinessListPage = lazy(() => import("./Admin/BusinessListPage"));
+const BusinessDetailPage = lazy(() => import("./Admin/BusinessDetailPage"));
 
 const RouteFallback = () => (
     <div className="flex items-center justify-center h-screen">
@@ -137,6 +139,14 @@ const Routes: React.FC = () => (
                 <Route
                     path="/admin/business-types"
                     element={<BusinessTypeListPage />}
+                />
+                <Route
+                    path="/admin/businesses"
+                    element={<BusinessListPage />}
+                />
+                <Route
+                    path="/admin/businesses/:id"
+                    element={<BusinessDetailPage />}
                 />
             </AnimationRoutes>
         </Suspense>

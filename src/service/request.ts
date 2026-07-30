@@ -64,7 +64,20 @@ export async function request<T>(
         throw new RequestError("Không kết nối được tới máy chủ");
     }
 
-    const resData = (await response.json()) as ApiResponse<T>;
+    let resData: ApiResponse<T>;
+    try {
+        resData = (await response.json()) as ApiResponse<T>;
+    } catch (err) {
+        // Phan hoi khong phai JSON hop le (vd rong hoac HTML) - thuong do goi
+        // sai duong dan, hoac backend chua trien khai route nay (chua deploy
+        // ban moi nhat) nen tra ve 404/502 khong co body JSON. Nem loi ro
+        // rang thay vi de nguyen SyntaxError kho hieu ("Unexpected end of
+        // JSON input") lam nguoi dung tuong nham la loi khac.
+        throw new RequestError(
+            `Phan hoi khong hop le tu may chu (status ${response.status}) - co the API chua duoc trien khai hoac duong dan sai: ${method} ${url}`,
+            response.status,
+        );
+    }
 
     if (!resData.success) {
         if (response.status === 401) {

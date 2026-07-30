@@ -7,3 +7,5 @@ export {
     isBusinessFormValid,
 } from "./BusinessForm";
 export type { BusinessFormValues } from "./BusinessForm";
+export { default as RequiredDocumentsPanel } from "./RequiredDocumentsPanel";
+export type { RequiredDocumentsPanelProps } from "./RequiredDocumentsPanel";

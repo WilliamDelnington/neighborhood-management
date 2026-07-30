@@ -152,7 +152,7 @@ export const CONTACTS: Array<Utinity> = [
     },
     {
         key: "neighborhood-leader",
-        label: "Tổ trưởng Tổ dân phố Hòa Bình",
+        label: "Tổ trưởng tổ dân phố",
         icon: Icon.EnterpriseIcon,
         phoneNumber: "",
     },

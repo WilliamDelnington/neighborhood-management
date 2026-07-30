@@ -1,5 +1,12 @@
 import { API } from "@constants/common";
-import { Business, Household, House, HouseStatus, PaginatedData } from "@dts";
+import {
+    Business,
+    FileAsset,
+    Household,
+    House,
+    HouseStatus,
+    PaginatedData,
+} from "@dts";
 import { request } from "./request";
 
 /**
@@ -65,3 +72,12 @@ export const updateHouseStatus = (
 
 export const deleteHouse = (id: string): Promise<null> =>
     request<null>("DELETE", `${API.HOUSES}/${id}`);
+
+export const fetchHouseAttachments = (id: string): Promise<FileAsset[]> =>
+    request<FileAsset[]>("GET", `${API.HOUSES}/${id}/attachments`);
+
+export const deleteHouseAttachment = (
+    id: string,
+    fileId: string,
+): Promise<null> =>
+    request<null>("DELETE", `${API.HOUSES}/${id}/attachments/${fileId}`);
