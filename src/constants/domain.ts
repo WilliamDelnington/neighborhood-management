@@ -18,7 +18,7 @@ import type {
 } from "@dts";
 
 export const ROLE_LABEL: Record<Role, string> = {
-    house_owner: "Chủ hộ",
+    house_owner: "Chủ sở hữu",
     neighborhood_leader: "Tổ trưởng",
     secretary: "Bí thư",
     regional_police: "Công an khu vực",

@@ -113,6 +113,14 @@ export const MORE_FEATURES: Array<Utinity> = [
         path: "/admin/business-types",
         requiredPermission: "business_types.read",
     },
+    {
+        key: "election",
+        label: "Bầu cử",
+        icon: Icon.VoteIcon,
+        color: "#B91C1C",
+        bgColor: "#FEE2E2",
+        inDevelopment: true,
+    },
 ];
 
 export const EMERGENCY_HOTLINES: Array<{

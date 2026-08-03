@@ -994,3 +994,346 @@ verify a business. Verify at minimum that:
     and
 -   a business cannot become `verified` until every required document has been
     approved by its authorized reviewer.
+
+## Neighborhood Administration and Leader Assignment
+
+Introduce `Neighborhood` as a first-class entity. The application previously
+stored only neighborhood-leader accounts and free-form cluster values; it must
+now model each neighborhood explicitly so people, households, permissions, and
+operational records can be assigned consistently.
+
+### Neighborhood model
+
+Create a `Neighborhood` Mongoose model and a `neighborhoods` MongoDB
+collection. Use a numeric, immutable `sequence` from 1 through 21 and a unique,
+human-readable `code` such as `TDP-01` through `TDP-21`; do not use a displayed
+name as the primary identifier. The model must include:
+
+-   `name` (for example, `Tổ dân phố 01`), `code`, `sequence`, `active`;
+-   fundamental information: `address`, optional `description`, `contactPhone`,
+    `notes`, and optional geographic/boundary metadata when available;
+-   `leaderUserId`: the currently assigned `User` with the
+    `neighborhood_leader` role, nullable when no leader has been assigned;
+-   `createdBy`, `updatedBy`, timestamps, and indexes on `code`, `sequence`,
+    `active`, and `leaderUserId`.
+
+Use a separate `NeighborhoodLeaderAssignment` collection for the assignment
+history: `neighborhoodId`, `leaderUserId`, `assignedBy`, `assignedAt`,
+`unassignedAt`, `unassignedBy`, and optional `note`. Permit only one active
+leader assignment per neighborhood through a partial unique index. The current
+leader remains denormalized in `Neighborhood.leaderUserId` for efficient Admin
+Dashboard lists; update both records atomically in a transaction where
+available. This preserves a clear audit trail when leadership changes.
+
+### Relationships and migration rules
+
+-   Add `neighborhoodId` to `User` where a leader or official has a primary
+    neighborhood assignment, and add `assignedNeighborhoodIds` for accounts that
+    legitimately cover multiple neighborhoods. Do not rely on a display-name
+    match. Keep `assignedClusters` only as a backwards-compatible transitional
+    field and migrate it away once verified.
+-   Add a required, indexed `neighborhoodId` reference to `Household`. Existing
+    free-form `cluster`/`residentialCluster` values must be mapped to a real
+    neighborhood ID during migration; retain the original value in migration logs
+    until administrators verify every unmatched record.
+-   Add `neighborhoodId` to other scoped records where they are queried by local
+    area, including complaints, PCCC checks, security records, meetings,
+    announcements, businesses, and business-document review work. Derive it from
+    a household/business when feasible; prevent clients from assigning a record to
+    a neighborhood outside their authorization.
+-   Extend `RoleAssignment.scopeType` with `neighborhood` and store neighborhood
+    ObjectIds in `scopeValues`. Server-side guards for `neighborhood_leader` must
+    query these IDs (and the current leader assignment), never a client-supplied
+    neighborhood code.
+
+### Initial setup: exactly 21 neighborhoods
+
+Add an idempotent, development-safe seed/migration command that first creates
+the `Neighborhood` schema, then upserts exactly the 21 canonical records below.
+The seed must be safe to rerun: identify each row by `code`, update only
+seed-controlled defaults, and never overwrite an existing leader assignment,
+address, notes, or administrator edits.
+
+| Sequence | Code     | Default name  |
+| -------- | -------- | ------------- |
+| 1        | `TDP-01` | Tổ dân phố 01 |
+| 2        | `TDP-02` | Tổ dân phố 02 |
+| 3        | `TDP-03` | Tổ dân phố 03 |
+| 4        | `TDP-04` | Tổ dân phố 04 |
+| 5        | `TDP-05` | Tổ dân phố 05 |
+| 6        | `TDP-06` | Tổ dân phố 06 |
+| 7        | `TDP-07` | Tổ dân phố 07 |
+| 8        | `TDP-08` | Tổ dân phố 08 |
+| 9        | `TDP-09` | Tổ dân phố 09 |
+| 10       | `TDP-10` | Tổ dân phố 10 |
+| 11       | `TDP-11` | Tổ dân phố 11 |
+| 12       | `TDP-12` | Tổ dân phố 12 |
+| 13       | `TDP-13` | Tổ dân phố 13 |
+| 14       | `TDP-14` | Tổ dân phố 14 |
+| 15       | `TDP-15` | Tổ dân phố 15 |
+| 16       | `TDP-16` | Tổ dân phố 16 |
+| 17       | `TDP-17` | Tổ dân phố 17 |
+| 18       | `TDP-18` | Tổ dân phố 18 |
+| 19       | `TDP-19` | Tổ dân phố 19 |
+| 20       | `TDP-20` | Tổ dân phố 20 |
+| 21       | `TDP-21` | Tổ dân phố 21 |
+
+Implement the migration in phases: seed the 21 neighborhoods; map known legacy
+cluster values; produce an admin-visible report for unmatched values; then make
+`Household.neighborhoodId` mandatory only after the report is empty. Never
+delete or silently reassign legacy data. The command must be disabled or require
+explicit confirmation outside development/staging.
+
+### Admin Dashboard: Neighborhood management
+
+Add an admin-only navigation item and management page labelled `Tổ dân phố`.
+It must provide a paginated/searchable list of all 21 neighborhoods with code,
+name, status, household count, citizen count, active business count, and the
+current assigned leader (name, phone, account status). Use mobile-friendly
+summary cards where a table would overflow.
+
+The neighborhood detail/edit screen must show fundamental information and a
+dedicated `Tài khoản tổ trưởng` selector. The selector lists only active users
+whose roles include `neighborhood_leader`, supports clearing an assignment, and
+shows a confirmation when moving a leader from another neighborhood. On save,
+the service must create/close `NeighborhoodLeaderAssignment` history records,
+update the user's assigned neighborhood scope, invalidate or refresh affected
+sessions/permissions, and write an `AuditLog` entry. Do not permit a UI-only
+assignment: the API must enforce the same checks.
+
+Neighborhood leaders receive a read/write operational dashboard limited to their
+assigned neighborhood(s). They must never access households, files, business
+documents, complaints, reports, or aggregate counts from another neighborhood.
+Admins may assign multiple neighborhoods only when explicitly required; when
+the product policy is one leader per neighborhood, reject a second active
+assignment with a clear Vietnamese validation message.
+
+### API and validation
+
+Add the following protected endpoints using the project's shared response and
+error conventions:
+
+-   `GET /api/neighborhoods` — admin full list; scoped roles receive only allowed
+    neighborhoods. Support search, `active`, pagination, and summary counts.
+-   `POST /api/neighborhoods` — admin only. In production, protect creation so it
+    cannot accidentally produce a 22nd canonical neighborhood without an explicit
+    policy change.
+-   `GET/PATCH /api/neighborhoods/:id` — admin; scoped read-only access where
+    appropriate.
+-   `PUT /api/neighborhoods/:id/leader` — admin only. Accept a nullable
+    `leaderUserId`, validate the target user is active and holds
+    `neighborhood_leader`, then perform the current-assignment and history update
+    atomically.
+-   `GET /api/neighborhoods/:id/leader-history` — admin only.
+
+Validate Mongo IDs, name/code format, unique sequence/code constraints, active
+leader role, and scope before every write. Log create/update/activate/deactivate
+and leader assignment changes with prior and resulting state. Add tests for the
+21-record idempotent seed, unique code/sequence, leader-role validation,
+assignment replacement history, legacy-cluster migration reporting, and denial
+of cross-neighborhood access.
+
+## Resident Account Onboarding, Household Linking, and Owner Invitations
+
+Extend account onboarding without replacing the existing MongoDB/Mongoose
+identity model. The current system already has `User` (with `zaloUserId`,
+optional unique `phone`, roles, `householdId`, and neighborhood scope),
+`Citizen` (with encrypted phone/CCCD fields), `Household`, `House`, and
+`Neighborhood`. New work must build on these models rather than introduce the
+SQL tables or UUID-primary-key schemas sometimes used in conceptual designs.
+
+### Existing baseline that must remain compatible
+
+-   Zalo Mini App login verifies an access token server-side in production and
+    identifies the session by `zaloUserId`. In development, sandbox login is only
+    for testing and must never be enabled in production.
+-   The web fallback currently uses phone and password. It is a valid existing
+    path; no migration may invalidate an existing password or session.
+-   A household can be linked to an account through `User.householdId` and
+    `Household.headOfHouseholdUserId`. Keep the display name on `Household` for
+    unlinked households, but treat the object references as the authoritative
+    account links after verification.
+-   CCCD belongs to the `Citizen` profile, not the initial authentication form.
+    It is optional at onboarding, encrypted at rest, lookup-hashed, and masked in
+    ordinary API responses. Do not place CCCD in `User`, JWT claims, URLs, audit
+    metadata, or application logs.
+-   `Neighborhood` and leader assignments are the source of truth for the local
+    scope. A neighborhood leader can act only for households in their assigned
+    `neighborhoodId`; legacy `cluster` values remain transitional data only.
+
+### Phase 1: verified phone identity and account matching
+
+Add a pluggable phone-verification service for SMS OTP and, where the approved
+Zalo integration returns a verifiable phone credential, Zalo phone-token
+verification. Never trust a phone number supplied directly by the Mini App as
+proof of ownership.
+
+1. Create a short-lived OTP/challenge record with a normalized-phone hash,
+   purpose, expiry, attempt count, delivery channel, requester, and audit
+   metadata. Store neither the raw OTP nor the raw phone in logs.
+2. On successful verification, look up an existing `User` by normalized phone
+   hash/value. If an account exists, request an authenticated, explicit account
+   link to its `zaloUserId`; do not silently merge accounts merely because a
+   client claims the same phone.
+3. If no account exists, create a minimal active/pending account according to
+   the product policy, then link the verified Zalo identity. Preserve the
+   existing password-login option for users who choose it.
+4. Rate-limit OTP generation and verification, invalidate challenges after use,
+   and use a generic response when appropriate to prevent phone-number account
+   enumeration.
+
+Add `phoneVerifiedAt` and an optional normalized-phone lookup hash to `User`.
+Encrypt or otherwise protect account phone storage consistently with the
+project's sensitive-data policy before any production migration. Audit
+verification and identity-link events without recording raw phones, tokens,
+passwords, or CCCD values.
+
+### Authentication test modes: OTP and no-OTP
+
+Make authentication mode explicit through a server-only environment setting,
+for example `AUTH_PHONE_MODE=otp|password|no_otp_test`. Never select the mode
+from a client request, query parameter, or frontend build variable.
+
+-   `otp`: production-ready phone flow. A verified OTP is required before a phone
+    identity is accepted or linked.
+-   `password`: existing web fallback. A non-blank password is required and must
+    be checked against `passwordHash`.
+-   `no_otp_test`: local/test-only flow for development before an OTP provider has
+    been registered. The password input remains visible for UI parity but may be
+    submitted blank. A blank value means “no password verification in this test
+    mode”; it is not a real password and must never be stored, hashed, replaced
+    with a default password, or logged.
+
+Reject application startup when `AUTH_PHONE_MODE=no_otp_test` is selected in
+production. Require an additional explicit server-side test/development guard,
+such as `ALLOW_INSECURE_TEST_AUTH=true`, and display a persistent, unmissable
+“Test authentication — OTP disabled” banner in non-production clients.
+
+In `no_otp_test`, restrict access to approved development/staging environments
+and seeded test accounts or a test-phone allowlist. Rate-limit attempts, write a
+redacted audit action such as `auth.login.no_otp_test`, and return no detail
+that reveals whether an arbitrary production phone number exists. Password reset,
+account linking, role changes, exports, and other sensitive account actions
+must still require their normal authorization; no-OTP login must not bypass
+RBAC, neighborhood scope, or session checks.
+
+The login validator must branch by server-selected mode: accept an empty
+password only in `no_otp_test`; reject it in `password`; and ignore/reject it
+as appropriate in `otp`. Add tests proving a blank password succeeds only in
+the guarded local/test mode and fails in password and production modes.
+
+### Phase 2: neighborhood-assisted household-head onboarding
+
+Provide a scoped onboarding action for authorized neighborhood staff. This is
+not direct credential creation. The staff member selects a household within
+their assigned neighborhood and sends an invitation to a supplied phone number
+or an already verified linked account.
+
+-   Add `HouseholdAccountInvitation` with `householdId`, `invitedPhoneHash`,
+    optional `invitedUserId`, `invitedName`, `invitedBy`, `neighborhoodId`,
+    `status` (`pending`, `accepted`, `expired`, `cancelled`, `rejected`),
+    `expiresAt`, `acceptedAt`, and safe delivery/audit metadata.
+-   The invitation endpoint must verify that the actor has an assigned
+    neighborhood, that the household belongs to it, and that the actor is allowed
+    to manage household onboarding. A leader must not create, view, resend, or
+    cancel invitations across neighborhood boundaries.
+-   Send a time-limited, single-use acceptance link or OTP through an approved
+    SMS/Zalo OA adapter. The recipient must authenticate and verify the invited
+    phone before accepting.
+-   On acceptance, update `User.householdId`,
+    `Household.headOfHouseholdUserId`, and (when appropriate) the related
+    `Citizen` link in one transaction. Preserve the previous link in the audit
+    trail and require an authorized review for a contested reassignment.
+-   Leaders may request account suspension/revocation, but only an authorized
+    ward official or admin may lock an account. Never generate a shared default
+    password such as `123456`.
+
+### Phase 3: owner-managed multi-household residences
+
+Support a property owner inviting a prospective household head for a room or
+sub-address without allowing the owner to collect private household-member
+data. Add the feature only after a clear ownership relationship is implemented.
+
+-   Add `HouseOwnership` for historical ownership: `houseId`, either a citizen or
+    organization owner reference, `ownershipType`, `startDate`, `endDate`,
+    `active`, verification status, and audit fields. Do not overwrite a previous
+    owner; end-date the earlier relationship.
+-   Add an optional `Organization` model only if organization ownership is in
+    scope. Keep a legal representative link separate from private household data.
+-   Extend `Household` with an optional `subAddress` and controlled lifecycle
+    status including `pending_invitation` and `active`. Enforce one active
+    household per `houseId + normalizedSubAddress`; a new invitation for an
+    occupied room requires an explicit move-out/end-of-residence action.
+-   An owner may submit only the prospective head's name, verified contact route,
+    sub-address, start date, and an optional supporting attachment. They must not
+    view or edit the invitee's CCCD, household members, or sensitive profile.
+-   Reuse `HouseholdAccountInvitation` with an owner-invitation purpose. Expire
+    unaccepted invitations after a configurable period (72 hours by default),
+    revoke the token after use, and notify the relevant neighborhood team when a
+    residence change is accepted.
+
+### APIs, UI, and acceptance criteria
+
+Add protected endpoints for OTP request/verification, account-identity linking,
+household invitation creation/list/resend/cancel/accept, and owner residence
+invitations. Validate every Mongo ObjectId, invitation status, expiry, phone
+proof, actor role, ownership relation, and neighborhood scope. Use generic
+errors for unauthenticated account discovery and Vietnamese, actionable errors
+for authenticated users.
+
+The Admin/Neighborhood dashboard must show invitation status and audit history
+for its authorized scope only. The household detail view must distinguish a
+display-only household head name, a linked account, and a pending invitation.
+The resident experience must support Zalo sign-in first, a graceful permission
+screen for phone verification, and web phone/password fallback until OTP login
+is explicitly enabled.
+
+Acceptance tests must prove that a leader cannot invite or link a resident in
+another neighborhood; expired/reused invitations fail; OTP rate limits apply;
+acceptance creates only the intended account/household link; owners cannot read
+tenant CCCD or member records; and reassignment, lock requests, verification,
+and invitation actions create redacted audit events.
+
+## Configurable Phone Authentication: OTP and Password Modes
+
+Keep Zalo login as the preferred sign-in path in the Zalo Mini App. For phone
+authentication, support two explicitly configured server modes so local and
+integration testing do not depend on an unregistered SMS/Zalo OTP provider.
+The mode is a server environment setting, for example `AUTH_OTP_ENABLED`, and
+must never be selectable by a client request.
+
+### OTP-enabled mode
+
+When `AUTH_OTP_ENABLED=true`, phone registration, phone verification, and
+passwordless phone sign-in use a one-time passcode delivered by the configured
+provider. Store only a hashed OTP challenge with a short expiry, attempt limit,
+and purpose (`register`, `login`, `change_phone`, or `account_invitation`).
+Rate-limit challenge creation and verification by phone number, user, and IP.
+Do not log OTP values, delivery-provider secrets, or unmasked phone numbers.
+
+### No-OTP test mode
+
+When `AUTH_OTP_ENABLED=false`, do not send, generate, accept, or bypass an OTP.
+Phone registration and phone login must require both a valid phone number and a
+password. The password must meet the existing password policy, be stored only
+as a strong hash, and be checked with the normal rate-limited password-login
+flow. The UI must label this path clearly as password-based test/development
+sign-in; it must not display an OTP screen or a fake verification success.
+
+Existing phone/password accounts remain compatible in both modes. Enabling OTP
+later must not force a password reset or silently merge accounts. Account
+linking between Zalo and phone identities requires server-side proof of control
+of each identity; a client-supplied phone number is not proof.
+
+### API, configuration, and tests
+
+-   Expose only mode-appropriate endpoints and UI actions. OTP endpoints must
+    return a safe `404`/`feature unavailable` response when disabled; password
+    registration/login must continue to require `password` when disabled.
+-   Fail startup in production when OTP mode is enabled without the required
+    provider configuration. Development/test can intentionally run with OTP
+    disabled and a documented local configuration.
+-   Add tests proving that no-OTP mode rejects missing passwords and OTP payloads;
+    OTP-enabled mode rejects passwordless access until a valid OTP is verified;
+    expired/reused/over-limit OTP challenges fail; and neither mode returns a
+    password hash, OTP, or provider credential.
