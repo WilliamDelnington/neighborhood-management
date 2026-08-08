@@ -1,10 +1,13 @@
 import { API } from "@constants/common";
 import {
     Business,
+    Company,
     FileAsset,
     Household,
     House,
+    HousePhysicalStatus,
     HouseStatus,
+    HouseUsageType,
     PaginatedData,
 } from "@dts";
 import { request } from "./request";
@@ -17,7 +20,10 @@ import { request } from "./request";
 export const fetchHouses = (params: {
     search?: string;
     cluster?: string;
-    status?: HouseStatus;
+    // Truyen mot mang de loc theo nhieu trang thai cung luc (vd ["pending",
+    // "verified"]) - request() tu chuyen mang thanh chuoi phan tach boi dau
+    // phay qua String(), backend tu tach lai (xem GET /api/houses).
+    status?: HouseStatus | HouseStatus[];
     page?: number;
     limit?: number;
 }): Promise<PaginatedData<House>> =>
@@ -50,10 +56,31 @@ export const fetchHouseBusinesses = (
         limit: params.limit ?? 20,
     });
 
+export const fetchHouseCompanies = (
+    id: string,
+    params: { page?: number; limit?: number } = {},
+): Promise<PaginatedData<Company>> =>
+    request<PaginatedData<Company>>("GET", `${API.HOUSES}/${id}/companies`, {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+    });
+
 export interface HouseInput {
-    cluster: string;
+    cluster?: string;
+    // Neu co streetId, backend uu tien streetId va bo qua cluster (xem
+    // streetSync.ts o backend) - cluster chi con la fallback tu do.
+    streetId?: string;
+    // null = go gan to dan pho khoi nha so, undefined = giu nguyen.
+    neighborhoodId?: string | null;
     address: string;
+    physicalStatus?: HousePhysicalStatus;
+    // Muc dich su dung nha do chu nha tu khai bao - xem models/HouseRecord.ts
+    // o backend.
+    usageTypes?: HouseUsageType[];
+    otherUsageNote?: string;
     note?: string;
+    // Chi co y nghia luc tao moi (xem HouseForm.tsx / houseRecordService.createHouseRecord).
+    organizationId?: string;
 }
 
 export const createHouse = (input: HouseInput): Promise<House> =>

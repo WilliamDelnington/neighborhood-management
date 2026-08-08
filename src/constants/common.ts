@@ -17,16 +17,20 @@ export const API = {
     AUTH_LOGOUT: "/api/auth/logout",
 
     HOUSES: "/api/houses",
+    ORGANIZATIONS: "/api/organizations",
     HOUSEHOLDS: "/api/households",
     HOUSEHOLDS_LOOKUP: "/api/households/lookup",
     CITIZENS: "/api/citizens",
+    STREETS: "/api/streets",
     NEIGHBORHOODS: "/api/neighborhoods",
     BUSINESSES: "/api/businesses",
     BUSINESS_TYPES: "/api/business-types",
+    COMPANIES: "/api/companies",
 
     COMPLAINTS: "/api/complaints",
     COMPLAINTS_MINE: "/api/complaints/mine",
     COMPLAINTS_LOOKUP: "/api/complaints/lookup",
+    COMPLAINTS_DRAFT: "/api/complaints/draft",
 
     SUPPORT_TICKETS: "/api/support-tickets",
     SUPPORT_TICKETS_MINE: "/api/support-tickets/mine",
@@ -49,5 +53,3 @@ export const API = {
 export const SEARCH_NOT_FOUND = "Không tìm thấy thông tin";
 
 export const DEFAULT_PAGE_SIZE = 10;
-
-export const MAX_COMPLAINT_IMAGES = 4;

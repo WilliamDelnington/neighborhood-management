@@ -1294,6 +1294,183 @@ acceptance creates only the intended account/household link; owners cannot read
 tenant CCCD or member records; and reassignment, lock requests, verification,
 and invitation actions create redacted audit events.
 
+## Digital House Domain (Authoritative House Specification)
+
+For all house-related work, this section is the source of truth and supersedes
+earlier, less detailed house/household wording where they conflict. A `House`
+is a stable address record, never a user account. A house can have multiple
+owners, households, tenants, usage units, and businesses concurrently. People,
+organizations, households, and businesses are time-bound relationships to a
+house; they must not be flattened into the House document.
+
+### Administrative boundary and configurability
+
+Keep the existing `Neighborhood` model as the application representation of a
+TDP. A `Ward`/tenant configuration is the parent scope when the deployment
+serves more than one ward. Do not hard-code “Dương Nội”, “Hòa Bình”, or a
+specific TDP in domain logic, code generation, validation, or authorization;
+use seeded/configured display data instead.
+
+-   An `admin` operating at the ward scope performs the document's Ward-admin
+    responsibilities: configuration, leader assignment, lock/unlock approval,
+    aggregate dashboards, and audit access.
+-   A `neighborhood_leader` is the TDP administrator, scoped only to their
+    assigned `Neighborhood`; they create and verify address records, invite
+    property owners, and manage local operational data within that scope.
+-   `house_owner` means a verified property owner or explicitly delegated house
+    manager for the particular `House`; it is distinct from `household_head`.
+    A house owner may be related to more than one house.
+-   A household head, household member, and business representative receive only
+    the narrow household/business scopes assigned to them. Use permissions and
+    scope records rather than assuming a global role conveys access to every
+    house.
+
+### House, address, and status model
+
+Create or extend `House` with immutable MongoDB `_id`, a unique human-readable
+`houseCode`, `neighborhoodId`, optional parent ward/tenant ID, and a separate
+address object/reference. `houseCode` may be reissued during an approved address
+normalization; record the prior code in audit/history rather than changing the
+MongoDB ID.
+
+Address data must support configurable structured fields, including display
+name, house number, street, alley, zone/subdivision, block, lot, full address,
+latitude, longitude, and future polygon geometry. Enforce uniqueness within its
+administrative scope using a normalized address/code strategy; do not depend on
+a display label alone.
+
+Model the following independent House state dimensions. They must never be
+collapsed into one ambiguous `status` field:
+
+-   `physicalStatus`: `not_handed_over`, `not_renovated`, `under_construction`,
+    `under_renovation`, `completed`, `in_use`, `vacant`, or `damaged`.
+-   `usageStatus`: `owner_occupied`, `family_occupied`,
+    `rented_to_individual`, `rented_to_organization`, `rented_to_both`,
+    `owner_business`, `mixed_residential_business`, `vacant`, or `unknown`.
+-   `recordStatus`: `draft`, `waiting_owner`, `waiting_verification`, `verified`,
+    `needs_update`, `disputed`, `locked`, or `archived`.
+-   `riskStatus`: `normal`, `watch`, `needs_inspection`, `high_risk`, or
+    `emergency`.
+
+Store the actor, time, reason, before/after values, and verification authority
+for every state change. TDP verification is a locality/actual-condition check;
+only the appropriate specialist role may approve specialist documents such as
+fire, safety, food, environment, or business licences.
+
+### Time-bound house relationships
+
+Implement the following MongoDB/Mongoose models (the model names may differ
+only where existing project conventions require it):
+
+-   `HouseOwnership`: `houseId`, exactly one owner reference (`citizenId` or
+    `organizationId`), relationship type (`primary_owner`, `co_owner`,
+    `authorized_manager`, `legal_representative`, `contact_person`),
+    `startDate`, optional `endDate`, `verificationStatus`, `active`, reason, and
+    audit fields. A house may have multiple active owners. On transfer, end the
+    prior relationship and create a new one; never overwrite or delete history.
+-   `Organization`: legal name, optional tax code, legal representative/contact
+    references, contact details, status, and audit fields. It is used only when
+    an owner or business is a legal entity.
+-   `UsageUnit`: `houseId`, usage type, area descriptor (whole house/floor/room/
+    area), optional normalized sub-address, start/end dates, operational status,
+    verification status, and audit fields. A house may have several simultaneous
+    units, such as a restaurant on floor 1 and a household on floors 2–3.
+-   `Household`: must be associated with its `House` and, where applicable, a
+    `UsageUnit`; retain `subAddress`, lifecycle (`pending_invitation`, `active`,
+    `ended`, `archived`), head relationship, and residence information. Enforce
+    only one active household per house plus normalized sub-address/usage unit.
+-   `HouseholdMember` or an equivalent extension of `Citizen`: household link,
+    relationship to head, residence status, start/end dates, and verification
+    status. Store only necessary social indicators, not an authoritative national
+    residence registry.
+-   `ResidencyEvent`: arrival, departure, temporary residence/absence, and
+    verification events. Retain the historical event stream rather than deleting
+    members when they leave.
+-   `LeaseContract`: lessor, lessee, `houseId`, optional `usageUnitId`, contract
+    reference, start/end dates, lifecycle status, controlled attachment IDs, and
+    configurable expiry warnings at 30/15/7 days.
+-   `Business`: link to `houseId` and `usageUnitId`/business location; retain the
+    existing dynamic document-verification workflow. `BusinessDocument` remains
+    the document-review record and does not replace the business location or
+    licence lifecycle.
+-   `FireSafetyProfile` and `EnvironmentProfile`: house or usage-unit scoped
+    checklists, findings, remediation due dates/results, current risk inputs, and
+    audit data. Reuse existing PCCC capabilities where equivalent; do not create
+    competing records for the same inspection purpose.
+
+All relational records require `createdAt`, `createdBy`, `updatedAt`,
+`updatedBy`, optimistic versioning, status, and appropriate start/end or
+archival fields. Do not hard-delete historical data. A locked account blocks
+authentication and changes; it must not remove houses, households, contracts,
+documents, or relationship history.
+
+### Ownership, invitation, and privacy workflow
+
+1. An authorized TDP user creates a House in their assigned neighborhood. The
+   server validates uniqueness and records it as `waiting_owner` or `draft`.
+2. The TDP invites a prospective property owner via the existing controlled
+   account-invitation/OTP-or-test-authentication mechanism. Acceptance creates
+   a `HouseOwnership` relationship in `waiting_verification`.
+3. The TDP records the local verification outcome. Specialist approval remains
+   separate. A verified owner can update the house's usage declaration, create
+   permitted usage units, and invite a household head or business representative
+   only for a house with an active ownership/management relationship.
+4. A recipient accepts the invitation and self-declares the household/business
+   information within their scope. The system creates/activates the associated
+   household, business, lease, or member relationships without exposing private
+   data to the owner.
+5. Ending a lease, moving out, transferring ownership, or closing a business
+   ends the applicable relationship/status with a reason and audit record; it
+   never deletes prior records.
+
+Property owners may see the invited head's name, contact route, invitation and
+relationship status, and limited contract data. They must never see tenant
+CCCD, other household members, or private profile data. A TDP from another
+neighborhood receives `403` for any House, invitation, contract, resident, or
+business record outside its scope. Public/QR lookups never return unmasked
+personal data.
+
+### House APIs, interfaces, and reporting
+
+Use the project's `/api` route convention and common response format. Add the
+following House-domain route groups with role and scope checks on every request:
+
+-   Houses: list/search/map, create, read, patch states/address, archive, and
+    verification requests/results.
+-   Ownership: list current/history, invite owner, accept invitation, verify,
+    delegate management, and end a relationship.
+-   Usage units: create/list/update/end a unit under a permitted House.
+-   Households/residency: create/invite/accept, add/end members, record
+    arrival/departure/temporary residence, and preserve history.
+-   Leases: create/list/update/end, attach controlled files, and return expiring
+    contract alerts.
+-   Businesses: create/link a business to a usage unit, then use the existing
+    business-document endpoints for licence submissions and specialist review.
+-   PCCC/environment: create or update the relevant house/unit profile and
+    remediation status, using the existing file/audit conventions.
+
+Add role-aware screens: ward aggregate dashboard, TDP house list/map/create/
+verify/dashboard, owner “My Houses” with units/contracts/invitations, household
+profile and member/residency actions, and business profile/licence/PCCC/
+environment screens. Lists and dashboards must derive counts from active
+relationships and current statuses, then permit drill-down only after scope
+authorization.
+
+### House-domain acceptance tests
+
+Use synthetic demo data only. The MVP demo must prove: a TDP creates a House;
+invites and verifies an owner; an owner creates two independent usage units;
+one household and one business operate in the same House; lease expiry alerts,
+licence review, PCCC, and environment findings remain separate; account locking
+does not erase data; and dashboards reflect the active relationships.
+
+Security tests must reject cross-neighborhood House access, business access to
+household-member data, owner access to tenant private data, a locked account's
+API request, and specialist-document approval by an unauthorized role. History
+tests must prove that changing owner, ending a lease, closing a business, or
+moving a resident ends the prior relationship while preserving all historic
+records and audit events.
+
 ## Configurable Phone Authentication: OTP and Password Modes
 
 Keep Zalo login as the preferred sign-in path in the Zalo Mini App. For phone

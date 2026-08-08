@@ -19,7 +19,10 @@ import {
     toBusinessInput,
 } from "@components/business";
 import { useStore } from "@store";
-import { BUSINESS_STATUS_LABEL, BUSINESS_STATUS_TONE } from "@constants/domain";
+import {
+    VERIFICATION_STATUS_LABEL,
+    VERIFICATION_STATUS_TONE,
+} from "@constants/domain";
 import { createBusiness, fetchBusinesses } from "@service/businessApi";
 import { AppError, Business, House } from "@dts";
 
@@ -201,12 +204,12 @@ const BusinessListContent: React.FC = () => {
                                         right={
                                             <StatusBadge
                                                 label={
-                                                    BUSINESS_STATUS_LABEL[
+                                                    VERIFICATION_STATUS_LABEL[
                                                         item.status
                                                     ]
                                                 }
                                                 tone={
-                                                    BUSINESS_STATUS_TONE[
+                                                    VERIFICATION_STATUS_TONE[
                                                         item.status
                                                     ]
                                                 }
@@ -309,6 +312,7 @@ const BusinessListContent: React.FC = () => {
 
             <HousePickerSheet
                 visible={housePickerVisible}
+                status={["unverified", "pending", "verified"]}
                 onClose={() => setHousePickerVisible(false)}
                 onSelect={handleSelectHouse}
             />

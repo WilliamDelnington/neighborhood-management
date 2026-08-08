@@ -32,15 +32,34 @@ import {
     toCitizenInput,
 } from "@components/citizen";
 import { useStore } from "@store";
-import { LOAI_SO_HUU_LABEL } from "@constants/domain";
-import { AppError, Citizen, House, Household } from "@dts";
+import {
+    VERIFICATION_STATUS_LABEL,
+    VERIFICATION_STATUS_TONE,
+    LOAI_SO_HUU_LABEL,
+} from "@constants/domain";
+import { AppError, Citizen, House, Household, VerificationStatus } from "@dts";
 import {
     deleteHousehold,
     fetchHouseholdById,
     fetchHouseholdCitizens,
     updateHousehold,
+    updateHouseholdStatus,
 } from "@service/householdApi";
 import { createCitizen } from "@service/citizenApi";
+import { fetchOrganizationById } from "@service/organizationApi";
+
+const ownerIdOfHouse = (household: Household): string | undefined => {
+    if (!household.houseId || typeof household.houseId === "string") {
+        return undefined;
+    }
+    const { ownerId } = household.houseId;
+    return typeof ownerId === "string" ? ownerId : ownerId?._id;
+};
+
+const ownerTypeOfHouse = (household: Household) =>
+    typeof household.houseId === "string"
+        ? undefined
+        : household.houseId?.ownerType;
 
 const toFormValues = (h: Household): HouseholdFormValues => {
     const house =
@@ -70,8 +89,10 @@ const HouseholdDetailContent: React.FC = () => {
     const navigate = useNavigate();
     const { openSnackbar } = useSnackbar();
     const user = useStore(state => state.user);
+    const isAdmin = !!user?.roles.includes("admin");
     const canUpdate = hasPermission(user, "households.update");
     const canDelete = hasPermission(user, "households.delete");
+    const canVerify = hasPermission(user, "households.verify");
     const canViewCitizens = hasPermission(user, "citizens.read");
     const canCreateCitizen = hasPermission(user, "citizens.create");
 
@@ -87,6 +108,37 @@ const HouseholdDetailContent: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [statusSubmitting, setStatusSubmitting] = useState(false);
+
+    const [isOwner, setIsOwner] = useState(false);
+    useEffect(() => {
+        const ownerId = household ? ownerIdOfHouse(household) : undefined;
+        if (!user || !household || !ownerId) {
+            setIsOwner(false);
+            return;
+        }
+        if (ownerTypeOfHouse(household) !== "organization") {
+            setIsOwner(ownerId === user.id);
+            return;
+        }
+        let cancelled = false;
+        fetchOrganizationById(ownerId)
+            .then(org => {
+                if (cancelled) return;
+                const representativeId =
+                    typeof org.representativeUserId === "string"
+                        ? org.representativeUserId
+                        : org.representativeUserId._id;
+                setIsOwner(representativeId === user.id);
+            })
+            .catch(() => {
+                if (!cancelled) setIsOwner(false);
+            });
+        // eslint-disable-next-line consistent-return
+        return () => {
+            cancelled = true;
+        };
+    }, [household, user]);
 
     const [citizenSheetVisible, setCitizenSheetVisible] = useState(false);
     const [citizenForm, setCitizenForm] =
@@ -163,6 +215,20 @@ const HouseholdDetailContent: React.FC = () => {
         }
     };
 
+    const handleStatusChange = async (target: VerificationStatus) => {
+        try {
+            setStatusSubmitting(true);
+            const updated = await updateHouseholdStatus(id, target);
+            setHousehold(updated);
+            setForm(toFormValues(updated));
+            openSnackbar({ type: "success", text: "Đã cập nhật trạng thái" });
+        } catch (err) {
+            openSnackbar({ type: "error", text: (err as AppError).message });
+        } finally {
+            setStatusSubmitting(false);
+        }
+    };
+
     const openCreateCitizen = () => {
         setCitizenForm({
             ...EMPTY_CITIZEN_FORM,
@@ -193,6 +259,46 @@ const HouseholdDetailContent: React.FC = () => {
         }
     };
 
+    const statusActions: {
+        label: string;
+        target: VerificationStatus;
+        danger?: boolean;
+    }[] = [];
+    if (household) {
+        if (isAdmin) {
+            (Object.keys(VERIFICATION_STATUS_LABEL) as VerificationStatus[])
+                .filter(s => s !== household.status)
+                .forEach(s =>
+                    statusActions.push({
+                        label: VERIFICATION_STATUS_LABEL[s],
+                        target: s,
+                        danger: s === "denied" || s === "locked",
+                    }),
+                );
+        } else if (household.status !== "locked") {
+            if (
+                isOwner &&
+                (household.status === "unverified" ||
+                    household.status === "denied")
+            ) {
+                statusActions.push({ label: "Gửi duyệt", target: "pending" });
+            }
+            if (!isOwner && canVerify && household.status === "pending") {
+                statusActions.push({ label: "Duyệt", target: "verified" });
+                statusActions.push({
+                    label: "Từ chối",
+                    target: "denied",
+                    danger: true,
+                });
+            }
+        }
+    }
+
+    const canEditNow =
+        canUpdate &&
+        !!household &&
+        ["unverified", "pending"].includes(household.status);
+
     return (
         <PageLayout id="admin-household-detail" title="Chi tiết hộ dân">
             <Box p={4}>
@@ -211,12 +317,26 @@ const HouseholdDetailContent: React.FC = () => {
                                 <Text.Title size="small">
                                     {household.code}
                                 </Text.Title>
-                                {household.needsSupport && (
+                                <Box flex style={{ gap: 8 }}>
                                     <StatusBadge
-                                        label="Cần hỗ trợ"
-                                        tone="yellow"
+                                        label={
+                                            VERIFICATION_STATUS_LABEL[
+                                                household.status
+                                            ]
+                                        }
+                                        tone={
+                                            VERIFICATION_STATUS_TONE[
+                                                household.status
+                                            ]
+                                        }
                                     />
-                                )}
+                                    {household.needsSupport && (
+                                        <StatusBadge
+                                            label="Cần hỗ trợ"
+                                            tone="yellow"
+                                        />
+                                    )}
+                                </Box>
                             </Box>
 
                             {editing ? (
@@ -294,9 +414,36 @@ const HouseholdDetailContent: React.FC = () => {
                                         value={household.note || "Không có"}
                                     />
 
-                                    {(canUpdate || canDelete) && (
+                                    {statusActions.length > 0 && (
+                                        <Box
+                                            mt={3}
+                                            flex
+                                            style={{ gap: 8, flexWrap: "wrap" }}
+                                        >
+                                            {statusActions.map(action => (
+                                                <Button
+                                                    key={action.target}
+                                                    className={
+                                                        action.danger
+                                                            ? "!bg-red-500"
+                                                            : undefined
+                                                    }
+                                                    loading={statusSubmitting}
+                                                    onClick={() =>
+                                                        handleStatusChange(
+                                                            action.target,
+                                                        )
+                                                    }
+                                                >
+                                                    {action.label}
+                                                </Button>
+                                            ))}
+                                        </Box>
+                                    )}
+
+                                    {(canEditNow || canDelete) && (
                                         <Box mt={4} flex style={{ gap: 8 }}>
-                                            {canUpdate && (
+                                            {canEditNow && (
                                                 <Button
                                                     variant="secondary"
                                                     fullWidth

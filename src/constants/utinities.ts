@@ -3,29 +3,12 @@ import { Utinity } from "@dts";
 
 export const APP_UTINITIES: Array<Utinity> = [
     {
-        key: "create-complaint",
-        label: "Gửi phản ánh",
+        key: "complaints",
+        label: "Phản ánh của tôi",
         icon: Icon.PenIcon,
         color: "#2563EB",
         bgColor: "#EBF4FF",
-        path: "/complaints/create",
-        requiredPermission: "complaints.create",
-    },
-    {
-        key: "lookup-complaint",
-        label: "Tra cứu phản ánh",
-        icon: Icon.SearchIcon,
-        color: "#7C3AED",
-        bgColor: "#F3E8FF",
         path: "/complaints/lookup",
-    },
-    {
-        key: "announcements",
-        label: "Xem thông báo",
-        icon: Icon.NotificationIcon,
-        color: "#D97706",
-        bgColor: "#FEF3C7",
-        path: "/announcements",
     },
     {
         key: "meetings",
@@ -97,14 +80,6 @@ export const MORE_FEATURES: Array<Utinity> = [
         path: "/support",
     },
     {
-        key: "notifications",
-        label: "Thông báo của tôi",
-        icon: Icon.NotificationIcon,
-        color: "#CA8A04",
-        bgColor: "#FEF9C3",
-        path: "/notifications",
-    },
-    {
         key: "admin-business-types",
         label: "Loại hình kinh doanh",
         icon: Icon.GlobeIcon,
@@ -122,6 +97,38 @@ export const MORE_FEATURES: Array<Utinity> = [
         inDevelopment: true,
     },
 ];
+
+export type MiniAppFeatureConfigEntry = {
+    key: string;
+    order: number;
+    visible: boolean;
+};
+
+/**
+ * Ap dung cau hinh thu tu/hien thi tinh nang do admin luu (Setting key
+ * "mini_app_features", xem settingsApi.ts) len tren catalog tinh nang tinh
+ * (APP_UTINITIES + MORE_FEATURES). Khong co cau hinh (chua duoc admin luu lan
+ * nao) -> giu nguyen thu tu catalog nhu truoc gio (hanh vi mac dinh). Tinh
+ * nang co trong catalog nhung chua co trong config (vd vua them vao code) van
+ * duoc hien, xep sau cac tinh nang da duoc cau hinh, theo dung thu tu catalog.
+ */
+export function resolveFeatureOrder(
+    catalog: Utinity[],
+    config?: MiniAppFeatureConfigEntry[] | null,
+): Utinity[] {
+    if (!config || config.length === 0) return catalog;
+
+    const configByKey = new Map(config.map(c => [c.key, c]));
+    return catalog
+        .filter(item => configByKey.get(item.key)?.visible !== false)
+        .map((item, index) => ({
+            item,
+            order: configByKey.get(item.key)?.order ?? Infinity,
+            index,
+        }))
+        .sort((a, b) => a.order - b.order || a.index - b.index)
+        .map(({ item }) => item);
+}
 
 export const EMERGENCY_HOTLINES: Array<{
     key: string;

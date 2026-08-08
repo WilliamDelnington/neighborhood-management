@@ -2,10 +2,10 @@ import { API } from "@constants/common";
 import {
     Business,
     BusinessDocument,
-    BusinessStatus,
     FileAsset,
     PaginatedData,
     RequiredDocumentsResult,
+    VerificationStatus,
 } from "@dts";
 import { request } from "./request";
 
@@ -51,13 +51,13 @@ export const updateBusiness = (
 export const deleteBusiness = (id: string): Promise<null> =>
     request<null>("DELETE", `${API.BUSINESSES}/${id}`);
 
-// Ghi de thu cong - CHI danh cho admin (xem PATCH /api/businesses/:id/status
-// o backend, gio yeu cau role admin). Luong binh thuong dung
-// submitBusinessDocument/reviewBusinessDocument ben duoi, trang thai duoc
-// backend tu tinh lai tu ket qua duyet tung giay to.
+// Admin ghi de tuy y; chu ho chi duoc goi voi status="pending" tu "denied" (gui
+// lai ho so sau khi bi tu choi - xem PATCH /api/businesses/:id/status o
+// backend). Luong binh thuong dung submitBusinessDocument/reviewBusinessDocument
+// ben duoi, trang thai duoc backend tu tinh lai tu ket qua duyet tung giay to.
 export const updateBusinessStatus = (
     id: string,
-    status: BusinessStatus,
+    status: VerificationStatus,
 ): Promise<Business> =>
     request<Business>("PATCH", `${API.BUSINESSES}/${id}/status`, { status });
 

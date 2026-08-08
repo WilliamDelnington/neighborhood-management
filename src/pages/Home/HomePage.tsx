@@ -12,8 +12,11 @@ import {
     APP_UTINITIES,
     MORE_FEATURES,
     EMERGENCY_HOTLINES,
+    MiniAppFeatureConfigEntry,
+    resolveFeatureOrder,
 } from "@constants/utinities";
 import { fetchPublicAnnouncements } from "@service/announcementApi";
+import { fetchPublicSettings } from "@service/settingsApi";
 import {
     LOAI_THONG_BAO_LABEL,
     APP_NAME_DEFAULT,
@@ -30,13 +33,19 @@ const HomePage: React.FunctionComponent = () => {
     );
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
+    const [featureConfig, setFeatureConfig] = useState<
+        MiniAppFeatureConfigEntry[] | undefined
+    >(undefined);
 
     const appName =
         user?.primaryRole === "house_owner"
             ? APP_NAME_HOUSE_OWNER
             : APP_NAME_DEFAULT;
 
-    const features = [...APP_UTINITIES, ...MORE_FEATURES]
+    const features = resolveFeatureOrder(
+        [...APP_UTINITIES, ...MORE_FEATURES],
+        featureConfig,
+    )
         .filter(
             item =>
                 !item.requiredPermission ||
@@ -55,6 +64,18 @@ const HomePage: React.FunctionComponent = () => {
             .then(res => setAnnouncements(res.items))
             .catch(() => setAnnouncements([]))
             .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        fetchPublicSettings()
+            .then(settings =>
+                setFeatureConfig(
+                    settings.mini_app_features as
+                        | MiniAppFeatureConfigEntry[]
+                        | undefined,
+                ),
+            )
+            .catch(() => setFeatureConfig(undefined));
     }, []);
 
     return (
@@ -82,7 +103,10 @@ const HomePage: React.FunctionComponent = () => {
                         size="xSmall"
                         className="text-main"
                         onClick={() =>
-                            navigate("/announcements", { animate: true })
+                            navigate("/notifications", {
+                                animate: true,
+                                state: { tab: "announcements" },
+                            })
                         }
                     >
                         Xem tất cả

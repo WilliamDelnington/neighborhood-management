@@ -17,6 +17,7 @@
     "scripts": {
         "start": "zmp start",
         "start:remote": "zmp start --mode remote",
+        "start:dev": "zmp start --mode dev",
         "deploy": "zmp deploy",
         "build:css": "postcss src/css/tailwind.css -o src/css/styles.css",
         "start:zalo": "zmp start --zalo-app --ios",

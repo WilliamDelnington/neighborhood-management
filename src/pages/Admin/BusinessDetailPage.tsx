@@ -13,8 +13,16 @@ import {
 } from "@components/business";
 import { AttachmentUploader } from "@components/attachments";
 import { useStore } from "@store";
-import { BUSINESS_STATUS_LABEL, BUSINESS_STATUS_TONE } from "@constants/domain";
-import { AppError, Business, BusinessStatus, RequiredDocumentItem } from "@dts";
+import {
+    VERIFICATION_STATUS_LABEL,
+    VERIFICATION_STATUS_TONE,
+} from "@constants/domain";
+import {
+    AppError,
+    Business,
+    VerificationStatus,
+    RequiredDocumentItem,
+} from "@dts";
 import {
     deleteBusiness,
     fetchBusinessAttachments,
@@ -23,12 +31,14 @@ import {
     updateBusiness,
     updateBusinessStatus,
 } from "@service/businessApi";
+import { fetchOrganizationById } from "@service/organizationApi";
 
-const BUSINESS_STATUS_OVERRIDE_OPTIONS: BusinessStatus[] = [
+const VERIFICATION_STATUS_OVERRIDE_OPTIONS: VerificationStatus[] = [
     "unverified",
-    "pending_approval",
-    "need_supplement",
+    "pending",
     "verified",
+    "denied",
+    "locked",
 ];
 
 const toFormValues = (b: Business): BusinessFormValues => ({
@@ -52,6 +62,11 @@ const ownerIdOfHouse = (business: Business): string | undefined => {
     const { ownerId } = business.houseId;
     return typeof ownerId === "string" ? ownerId : ownerId?._id;
 };
+
+const ownerTypeOfHouse = (business: Business) =>
+    typeof business.houseId === "string"
+        ? undefined
+        : business.houseId.ownerType;
 
 const houseIdOf = (business: Business): string =>
     typeof business.houseId === "string"
@@ -85,6 +100,7 @@ const BusinessDetailContent: React.FC = () => {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [statusSubmitting, setStatusSubmitting] = useState(false);
+    const [resubmitting, setResubmitting] = useState(false);
 
     const load = () => {
         if (!id) return;
@@ -101,10 +117,39 @@ const BusinessDetailContent: React.FC = () => {
 
     useEffect(load, [id]);
 
-    if (!id) return null;
+    const [isOwner, setIsOwner] = useState(false);
+    useEffect(() => {
+        const ownerId = business ? ownerIdOfHouse(business) : undefined;
+        if (!user || !business || !ownerId) {
+            setIsOwner(false);
+            return;
+        }
+        if (ownerTypeOfHouse(business) !== "organization") {
+            setIsOwner(ownerId === user.id);
+            return;
+        }
+        // Nha cua ho kinh doanh nay thuoc mot to chuc - phai tra ve nguoi dai
+        // dien cua to chuc do de so sanh, giong pattern o HouseDetailPage.tsx.
+        let cancelled = false;
+        fetchOrganizationById(ownerId)
+            .then(org => {
+                if (cancelled) return;
+                const representativeId =
+                    typeof org.representativeUserId === "string"
+                        ? org.representativeUserId
+                        : org.representativeUserId._id;
+                setIsOwner(representativeId === user.id);
+            })
+            .catch(() => {
+                if (!cancelled) setIsOwner(false);
+            });
+        // eslint-disable-next-line consistent-return
+        return () => {
+            cancelled = true;
+        };
+    }, [business, user]);
 
-    const isOwner =
-        !!user && !!business && ownerIdOfHouse(business) === user.id;
+    if (!id) return null;
 
     const handleSave = async () => {
         if (!form) return;
@@ -139,7 +184,7 @@ const BusinessDetailContent: React.FC = () => {
     // o backend). Luong binh thuong (chu ho nop giay to, nguoi phu trach duyet
     // tung giay to) di qua RequiredDocumentsPanel, trang thai duoc backend tu
     // tinh lai - khong con nut "Gửi duyệt"/"Duyệt"/"Từ chối" thu cong nhu truoc.
-    const handleOverrideStatus = async (target: BusinessStatus) => {
+    const handleOverrideStatus = async (target: VerificationStatus) => {
         try {
             setStatusSubmitting(true);
             const updated = await updateBusinessStatus(id, target);
@@ -178,7 +223,27 @@ const BusinessDetailContent: React.FC = () => {
         }
     };
 
-    const canEditNow = canUpdate;
+    const handleResubmit = async () => {
+        try {
+            setResubmitting(true);
+            const updated = await updateBusinessStatus(id, "pending");
+            setBusiness(updated);
+            setForm(toFormValues(updated));
+            openSnackbar({
+                type: "success",
+                text: "Đã gửi lại hộ kinh doanh để duyệt",
+            });
+        } catch (err) {
+            openSnackbar({ type: "error", text: (err as AppError).message });
+        } finally {
+            setResubmitting(false);
+        }
+    };
+
+    const canEditNow =
+        canUpdate &&
+        !!business &&
+        ["unverified", "pending"].includes(business.status);
 
     return (
         <PageLayout id="admin-business-detail" title="Chi tiết hộ kinh doanh">
@@ -197,10 +262,20 @@ const BusinessDetailContent: React.FC = () => {
                             <Text.Title size="small">
                                 {business.name}
                             </Text.Title>
-                            <StatusBadge
-                                label={BUSINESS_STATUS_LABEL[business.status]}
-                                tone={BUSINESS_STATUS_TONE[business.status]}
-                            />
+                            <Box flex style={{ gap: 8 }}>
+                                <StatusBadge
+                                    label={
+                                        VERIFICATION_STATUS_LABEL[
+                                            business.status
+                                        ]
+                                    }
+                                    tone={
+                                        VERIFICATION_STATUS_TONE[
+                                            business.status
+                                        ]
+                                    }
+                                />
+                            </Box>
                         </Box>
 
                         {editing ? (
@@ -268,7 +343,7 @@ const BusinessDetailContent: React.FC = () => {
                                             flex
                                             style={{ gap: 8, flexWrap: "wrap" }}
                                         >
-                                            {BUSINESS_STATUS_OVERRIDE_OPTIONS.filter(
+                                            {VERIFICATION_STATUS_OVERRIDE_OPTIONS.filter(
                                                 s => s !== business.status,
                                             ).map(s => (
                                                 <Button
@@ -279,14 +354,21 @@ const BusinessDetailContent: React.FC = () => {
                                                         handleOverrideStatus(s)
                                                     }
                                                 >
-                                                    {BUSINESS_STATUS_LABEL[s]}
+                                                    {
+                                                        VERIFICATION_STATUS_LABEL[
+                                                            s
+                                                        ]
+                                                    }
                                                 </Button>
                                             ))}
                                         </Box>
                                     </Box>
                                 )}
 
-                                {(canEditNow || canDelete) && (
+                                {(canEditNow ||
+                                    canDelete ||
+                                    (isOwner &&
+                                        business.status === "denied")) && (
                                     <Box mt={4} flex style={{ gap: 8 }}>
                                         {canEditNow && (
                                             <Button
@@ -308,6 +390,16 @@ const BusinessDetailContent: React.FC = () => {
                                                 Xóa
                                             </Button>
                                         )}
+                                        {isOwner &&
+                                            business.status === "denied" && (
+                                                <Button
+                                                    fullWidth
+                                                    loading={resubmitting}
+                                                    onClick={handleResubmit}
+                                                >
+                                                    Gửi lại
+                                                </Button>
+                                            )}
                                     </Box>
                                 )}
                             </>
@@ -318,7 +410,13 @@ const BusinessDetailContent: React.FC = () => {
                 {!loading && !error && business && (
                     <RequiredDocumentsPanel
                         businessId={id}
-                        canSubmit={isOwner || isAdmin}
+                        canSubmit={
+                            isAdmin ||
+                            (isOwner &&
+                                ["unverified", "pending"].includes(
+                                    business.status,
+                                ))
+                        }
                         canReview={canReviewItem}
                         onChanged={load}
                     />

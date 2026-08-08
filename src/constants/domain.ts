@@ -1,9 +1,12 @@
 import type {
     BusinessDocumentStatus,
-    BusinessStatus,
     DangKyHop,
     GioiTinh,
+    HouseOwnershipRelationshipType,
+    HouseOwnershipVerificationStatus,
+    HousePhysicalStatus,
     HouseStatus,
+    HouseUsageType,
     LoaiCauHoiKhaoSat,
     LoaiCuTru,
     LoaiSoHuu,
@@ -15,6 +18,7 @@ import type {
     Role,
     TrangThaiPhanAnh,
     TrangThaiYeuCauHoTro,
+    VerificationStatus,
 } from "@dts";
 
 export const ROLE_LABEL: Record<Role, string> = {
@@ -101,6 +105,53 @@ export const HOUSE_STATUS_LABEL: Record<HouseStatus, string> = {
     locked: "Đã khóa",
 };
 
+export const HOUSE_PHYSICAL_STATUS_LABEL: Record<HousePhysicalStatus, string> =
+    {
+        not_handed_over: "Chưa bàn giao",
+        not_renovated: "Chưa sửa",
+        under_construction: "Đang hoàn thiện",
+        under_renovation: "Đang sửa",
+        completed: "Đã hoàn thiện",
+        in_use: "Đang sử dụng",
+        vacant: "Để trống",
+        damaged: "Xuống cấp",
+    };
+
+export const HOUSE_USAGE_TYPE_LABEL: Record<HouseUsageType, string> = {
+    household: "Hộ dân",
+    business: "Hộ kinh doanh",
+    company: "Công ty",
+};
+
+export const HOUSE_OWNERSHIP_RELATIONSHIP_TYPE_LABEL: Record<
+    HouseOwnershipRelationshipType,
+    string
+> = {
+    primary_owner: "Chủ sở hữu chính",
+    co_owner: "Đồng sở hữu",
+    authorized_manager: "Người được ủy quyền quản lý",
+    legal_representative: "Người đại diện pháp luật",
+    contact_person: "Người liên hệ",
+};
+
+export const HOUSE_OWNERSHIP_VERIFICATION_STATUS_LABEL: Record<
+    HouseOwnershipVerificationStatus,
+    string
+> = {
+    waiting_verification: "Chờ xác thực",
+    verified: "Đã xác thực",
+    rejected: "Bị từ chối",
+};
+
+export const HOUSE_OWNERSHIP_VERIFICATION_STATUS_TONE: Record<
+    HouseOwnershipVerificationStatus,
+    "gray" | "blue" | "yellow" | "green" | "red"
+> = {
+    waiting_verification: "yellow",
+    verified: "green",
+    rejected: "red",
+};
+
 export const HOUSE_STATUS_TONE: Record<
     HouseStatus,
     "gray" | "blue" | "yellow" | "green" | "red"
@@ -112,25 +163,15 @@ export const HOUSE_STATUS_TONE: Record<
     locked: "gray",
 };
 
-// Trang thai xac thuc ho kinh doanh - tinh tu ket qua duyet tung giay to bat
-// buoc (xem @dts BusinessStatus). Khac HouseStatus (khong con "pending"/
-// "denied"/"locked" ma thay bang "pending_approval"/"need_supplement").
-export const BUSINESS_STATUS_LABEL: Record<BusinessStatus, string> = {
-    unverified: "Chưa xác thực",
-    pending_approval: "Đang chờ duyệt",
-    need_supplement: "Cần bổ sung hồ sơ",
-    verified: "Đã xác thực",
-};
-
-export const BUSINESS_STATUS_TONE: Record<
-    BusinessStatus,
+// Household/Business dung chung bo trang thai xac thuc voi House (xem @dts
+// VerificationStatus) - doc lap voi nhau ve gia tri, nhung cung mot 5-trang-thai
+// nen tai su dung nguyen nhan/mau cua HOUSE_STATUS_LABEL/_TONE.
+export const VERIFICATION_STATUS_LABEL: Record<VerificationStatus, string> =
+    HOUSE_STATUS_LABEL;
+export const VERIFICATION_STATUS_TONE: Record<
+    VerificationStatus,
     "gray" | "blue" | "yellow" | "green" | "red"
-> = {
-    unverified: "gray",
-    pending_approval: "yellow",
-    need_supplement: "red",
-    verified: "green",
-};
+> = HOUSE_STATUS_TONE;
 
 export const BUSINESS_DOCUMENT_STATUS_LABEL: Record<
     BusinessDocumentStatus,

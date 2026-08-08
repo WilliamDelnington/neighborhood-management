@@ -18,6 +18,10 @@ import {
     toHouseholdInput,
 } from "@components/household";
 import { useStore } from "@store";
+import {
+    VERIFICATION_STATUS_LABEL,
+    VERIFICATION_STATUS_TONE,
+} from "@constants/domain";
 import { createHousehold, fetchHouseholds } from "@service/householdApi";
 import { AppError, Household } from "@dts";
 
@@ -158,12 +162,26 @@ const HouseholdListContent: React.FC = () => {
                                     title={`${item.code} · ${item.headOfHousehold}`}
                                     subtitle={`${item.address} · ${item.memberCount} nhân khẩu`}
                                     right={
-                                        item.needsSupport ? (
+                                        <>
                                             <StatusBadge
-                                                label="Cần hỗ trợ"
-                                                tone="yellow"
+                                                label={
+                                                    VERIFICATION_STATUS_LABEL[
+                                                        item.status
+                                                    ]
+                                                }
+                                                tone={
+                                                    VERIFICATION_STATUS_TONE[
+                                                        item.status
+                                                    ]
+                                                }
                                             />
-                                        ) : undefined
+                                            {item.needsSupport && (
+                                                <StatusBadge
+                                                    label="Cần hỗ trợ"
+                                                    tone="yellow"
+                                                />
+                                            )}
+                                        </>
                                     }
                                     onClick={() =>
                                         navigate(

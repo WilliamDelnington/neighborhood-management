@@ -163,7 +163,7 @@ const HouseholdForm: React.FC<HouseholdFormProps> = ({ values, onChange }) => {
             />
             <HousePickerSheet
                 visible={housePickerVisible}
-                status="verified"
+                status={["unverified", "pending", "verified"]}
                 onClose={() => setHousePickerVisible(false)}
                 onSelect={(house: House) =>
                     onChange({
