@@ -8,15 +8,16 @@ import { House, HouseStatus } from "@dts";
 export interface HousePickerSheetProps {
     visible: boolean;
     cluster?: string;
-    status?: HouseStatus;
+    status?: HouseStatus | HouseStatus[];
     onClose: () => void;
     onSelect: (house: House) => void;
 }
 
 /**
  * Sheet chon nha so, dung cho HouseholdForm gan hộ dân vao mot nha. Backend tu
- * gioi han danh sach theo ownerId (resident) hoac assignedClusters (nhan vien)
- * cua nguoi goi (xem houseScopeFilter), nen resident chi thay nha cua chinh minh.
+ * gioi han danh sach theo ownerId (house_owner) hoac assignedClusters (nhan
+ * vien) cua nguoi goi (xem houseScopeFilter), nen house_owner chi thay nha
+ * cua chinh minh.
  */
 const HousePickerSheet: React.FC<HousePickerSheetProps> = ({
     visible,
@@ -61,8 +62,8 @@ const HousePickerSheet: React.FC<HousePickerSheetProps> = ({
                     {!loading && items.length === 0 && (
                         <EmptyState
                             label={
-                                status === "verified"
-                                    ? "Bạn chưa có nhà số nào được xác thực"
+                                status
+                                    ? "Bạn chưa có nhà số nào ở trạng thái phù hợp (chưa bị từ chối hoặc bị khóa)"
                                     : "Không tìm thấy nhà số phù hợp"
                             }
                         />

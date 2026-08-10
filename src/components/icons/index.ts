@@ -14,3 +14,5 @@ export { default as ImageIcon } from "./ImageIcon";
 export { default as NotificationIcon } from "./Notification";
 export { default as SuccessIcon } from "./SuccessIcon";
 export { default as PhoneIcon } from "./Phone";
+export { default as HouseIcon } from "./House";
+export { default as VoteIcon } from "./Vote";

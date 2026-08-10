@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Text, useNavigate } from "zmp-ui";
+import { Box, Icon, Text, useNavigate } from "zmp-ui";
 import { PageLayout, AppBottomNav } from "@components/layout";
 import { Button, Input } from "@components/customized";
 import {
@@ -28,6 +28,7 @@ const ComplaintLookupPage: React.FC = () => {
     const token = useStore(state => state.token);
     const user = useStore(state => state.user);
     const canViewInbox = hasPermission(user, "complaints.read");
+    const canCreate = hasPermission(user, "complaints.create");
 
     const [code, setCode] = useState("");
     const [searching, setSearching] = useState(false);
@@ -77,7 +78,7 @@ const ComplaintLookupPage: React.FC = () => {
     return (
         <PageLayout
             id="complaint-lookup-page"
-            title={canViewInbox ? "Phản ánh" : "Tra cứu phản ánh"}
+            title="Phản ánh"
             bottomNav={<AppBottomNav />}
         >
             <Box p={4}>
@@ -163,6 +164,30 @@ const ComplaintLookupPage: React.FC = () => {
 
                 {canViewInbox && <StaffComplaintInbox />}
             </Box>
+
+            {canCreate && (
+                <Box
+                    className="bg-main"
+                    style={{
+                        position: "fixed",
+                        right: 16,
+                        bottom: 76,
+                        width: 52,
+                        height: 52,
+                        borderRadius: 26,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 4px 12px rgba(37,99,235,0.4)",
+                        zIndex: 20,
+                    }}
+                    onClick={() =>
+                        navigate("/complaints/create", { animate: true })
+                    }
+                >
+                    <Icon icon="zi-plus" className="text-white" />
+                </Box>
+            )}
         </PageLayout>
     );
 };

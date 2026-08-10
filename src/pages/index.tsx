@@ -33,6 +33,20 @@ const AnnouncementDetailPage = lazy(
     () => import("./Announcements/AnnouncementDetailPage"),
 );
 
+const CorrespondenceListPage = lazy(
+    () => import("./Correspondences/CorrespondenceListPage"),
+);
+const CorrespondenceDetailPage = lazy(
+    () => import("./Correspondences/CorrespondenceDetailPage"),
+);
+const CorrespondenceComposePage = lazy(
+    () => import("./Correspondences/CorrespondenceComposePage"),
+);
+const MyChangeRequestsPage = lazy(
+    () => import("./ChangeRequests/MyChangeRequestsPage"),
+);
+const MyRequestsPage = lazy(() => import("./Requests/MyRequestsPage"));
+
 const NotificationsPage = lazy(
     () => import("./Notifications/NotificationsPage"),
 );
@@ -53,6 +67,8 @@ const CitizenDetailPage = lazy(() => import("./Admin/CitizenDetailPage"));
 const HouseListPage = lazy(() => import("./Admin/HouseListPage"));
 const HouseDetailPage = lazy(() => import("./Admin/HouseDetailPage"));
 const BusinessTypeListPage = lazy(() => import("./Admin/BusinessTypeListPage"));
+const BusinessListPage = lazy(() => import("./Admin/BusinessListPage"));
+const BusinessDetailPage = lazy(() => import("./Admin/BusinessDetailPage"));
 
 const RouteFallback = () => (
     <div className="flex items-center justify-center h-screen">
@@ -110,6 +126,25 @@ const Routes: React.FC = () => (
                     element={<AnnouncementDetailPage />}
                 />
 
+                <Route
+                    path="/correspondences"
+                    element={<CorrespondenceListPage />}
+                />
+                <Route
+                    path="/correspondences/compose"
+                    element={<CorrespondenceComposePage />}
+                />
+                <Route
+                    path="/correspondences/:id"
+                    element={<CorrespondenceDetailPage />}
+                />
+
+                <Route
+                    path="/change-requests/mine"
+                    element={<MyChangeRequestsPage />}
+                />
+                <Route path="/requests/mine" element={<MyRequestsPage />} />
+
                 <Route path="/meetings" element={<MeetingListPage />} />
                 <Route path="/meetings/:id" element={<MeetingDetailPage />} />
 
@@ -137,6 +172,14 @@ const Routes: React.FC = () => (
                 <Route
                     path="/admin/business-types"
                     element={<BusinessTypeListPage />}
+                />
+                <Route
+                    path="/admin/businesses"
+                    element={<BusinessListPage />}
+                />
+                <Route
+                    path="/admin/businesses/:id"
+                    element={<BusinessDetailPage />}
                 />
             </AnimationRoutes>
         </Suspense>

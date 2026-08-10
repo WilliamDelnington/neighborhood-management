@@ -3,29 +3,12 @@ import { Utinity } from "@dts";
 
 export const APP_UTINITIES: Array<Utinity> = [
     {
-        key: "create-complaint",
-        label: "Gửi phản ánh",
+        key: "complaints",
+        label: "Phản ánh của tôi",
         icon: Icon.PenIcon,
         color: "#2563EB",
         bgColor: "#EBF4FF",
-        path: "/complaints/create",
-        requiredPermission: "complaints.create",
-    },
-    {
-        key: "lookup-complaint",
-        label: "Tra cứu phản ánh",
-        icon: Icon.SearchIcon,
-        color: "#7C3AED",
-        bgColor: "#F3E8FF",
         path: "/complaints/lookup",
-    },
-    {
-        key: "announcements",
-        label: "Xem thông báo",
-        icon: Icon.NotificationIcon,
-        color: "#D97706",
-        bgColor: "#FEF3C7",
-        path: "/announcements",
     },
     {
         key: "meetings",
@@ -52,6 +35,100 @@ export const APP_UTINITIES: Array<Utinity> = [
         path: "/files",
     },
 ];
+
+/**
+ * Danh sach tien ich mo rong hien trong the "Tien ich khac" tren Home - khac
+ * voi APP_UTINITIES (6 thao tac nhanh luon hien day du), danh sach nay co the
+ * dai hon 6 va Home chi hien 6 muc dau tien, an cac muc con lai sau nut
+ * "Xem them" (xem HomePage.tsx). Thu tu trong mang la thu tu uu tien hien thi
+ * (bien tap thu cong, khong dua tren so lieu su dung thuc te).
+ */
+export const MORE_FEATURES: Array<Utinity> = [
+    {
+        key: "admin-houses",
+        label: "Nhà số của tôi",
+        icon: Icon.HouseIcon,
+        color: "#0891B2",
+        bgColor: "#CFFAFE",
+        path: "/admin/houses",
+        requiredPermission: "houses.read",
+    },
+    {
+        key: "admin-households",
+        label: "Hộ dân",
+        icon: Icon.EnterpriseIcon,
+        color: "#C2410C",
+        bgColor: "#FFEDD5",
+        path: "/admin/households",
+        requiredPermission: "households.read",
+    },
+    {
+        key: "admin-citizens",
+        label: "Nhân khẩu",
+        icon: Icon.PersonalIcon,
+        color: "#0D9488",
+        bgColor: "#CCFBF1",
+        path: "/admin/citizens",
+        requiredPermission: "citizens.read",
+    },
+    {
+        key: "support",
+        label: "Hỗ trợ",
+        icon: Icon.HeadsetIcon,
+        color: "#4338CA",
+        bgColor: "#E0E7FF",
+        path: "/support",
+    },
+    {
+        key: "admin-business-types",
+        label: "Loại hình kinh doanh",
+        icon: Icon.GlobeIcon,
+        color: "#6D28D9",
+        bgColor: "#EDE9FE",
+        path: "/admin/business-types",
+        requiredPermission: "business_types.read",
+    },
+    {
+        key: "election",
+        label: "Bầu cử",
+        icon: Icon.VoteIcon,
+        color: "#B91C1C",
+        bgColor: "#FEE2E2",
+        inDevelopment: true,
+    },
+];
+
+export type MiniAppFeatureConfigEntry = {
+    key: string;
+    order: number;
+    visible: boolean;
+};
+
+/**
+ * Ap dung cau hinh thu tu/hien thi tinh nang do admin luu (Setting key
+ * "mini_app_features", xem settingsApi.ts) len tren catalog tinh nang tinh
+ * (APP_UTINITIES + MORE_FEATURES). Khong co cau hinh (chua duoc admin luu lan
+ * nao) -> giu nguyen thu tu catalog nhu truoc gio (hanh vi mac dinh). Tinh
+ * nang co trong catalog nhung chua co trong config (vd vua them vao code) van
+ * duoc hien, xep sau cac tinh nang da duoc cau hinh, theo dung thu tu catalog.
+ */
+export function resolveFeatureOrder(
+    catalog: Utinity[],
+    config?: MiniAppFeatureConfigEntry[] | null,
+): Utinity[] {
+    if (!config || config.length === 0) return catalog;
+
+    const configByKey = new Map(config.map(c => [c.key, c]));
+    return catalog
+        .filter(item => configByKey.get(item.key)?.visible !== false)
+        .map((item, index) => ({
+            item,
+            order: configByKey.get(item.key)?.order ?? Infinity,
+            index,
+        }))
+        .sort((a, b) => a.order - b.order || a.index - b.index)
+        .map(({ item }) => item);
+}
 
 export const EMERGENCY_HOTLINES: Array<{
     key: string;
@@ -90,7 +167,7 @@ export const CONTACTS: Array<Utinity> = [
     },
     {
         key: "neighborhood-leader",
-        label: "Tổ trưởng Tổ dân phố Hòa Bình",
+        label: "Tổ trưởng tổ dân phố",
         icon: Icon.EnterpriseIcon,
         phoneNumber: "",
     },

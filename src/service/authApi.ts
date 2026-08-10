@@ -49,12 +49,21 @@ export const loginWithPhone = (
         useAuth: false,
     });
 
-export const setPassword = (password: string): Promise<User> =>
-    request<User>("POST", API.AUTH_SET_PASSWORD, { password });
+export const setPassword = (
+    password: string,
+    currentPassword?: string,
+): Promise<User> =>
+    request<User>("POST", API.AUTH_SET_PASSWORD, {
+        password,
+        currentPassword,
+    });
 
+// displayName KHONG con o day - tu "danh tinh", chi sua duoc qua ChangeRequest
+// (xem changeRequestApi.ts) - email duoc them vao vi truoc gio ton tai tren
+// User nhung chua tung sua duoc qua man tu-cap-nhat nay.
 export interface UpdateProfileParams {
-    displayName?: string;
     phone?: string;
+    email?: string;
     address?: string;
     householdId?: string;
     notificationPermission?: boolean;

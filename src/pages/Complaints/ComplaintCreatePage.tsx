@@ -3,10 +3,26 @@ import { Box, Icon, Select, Text, useNavigate, useSnackbar } from "zmp-ui";
 import { PageLayout } from "@components/layout";
 import { Button, Input, TextArea } from "@components/customized";
 import { RequireAuth, hasPermission } from "@components/role";
-import { createComplaint } from "@service/complaintApi";
+import {
+    createComplaint,
+    createComplaintDraftId,
+    deleteComplaintAttachment,
+} from "@service/complaintApi";
+import { pickAndUploadAttachment, PickedUpload } from "@service/uploadApi";
 import { NHOM_PHAN_ANH_LABEL } from "@constants/domain";
 import { Complaint, NhomPhanAnh } from "@dts";
 import { useStore } from "@store";
+
+/**
+ * pickAndUploadAttachment chi tra ve {url, fileAssetId} (khong co ten file
+ * goc) - suy ra ten hien thi tu url theo dung quy uoc dat ten cua
+ * saveUploadedFile ben backend (`${Date.now()}-${sanitizedOriginalName}`).
+ */
+const extractFileNameFromUrl = (url: string): string => {
+    const lastSegment = decodeURIComponent(url).split("/").pop() || "";
+    const dashIndex = lastSegment.indexOf("-");
+    return dashIndex >= 0 ? lastSegment.slice(dashIndex + 1) : lastSegment;
+};
 
 const ComplaintCreatePage: React.FC = () => (
     <RequireAuth>
@@ -26,6 +42,10 @@ const ComplaintCreatePageContent: React.FC = () => {
     const [area, setArea] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [created, setCreated] = useState<Complaint | null>(null);
+
+    const [draftId, setDraftId] = useState<string | null>(null);
+    const [pendingFiles, setPendingFiles] = useState<PickedUpload[]>([]);
+    const [pickingFile, setPickingFile] = useState(false);
 
     if (!canCreate) {
         return (
@@ -65,6 +85,45 @@ const ComplaintCreatePageContent: React.FC = () => {
         );
     }
 
+    const handlePickFile = async () => {
+        try {
+            setPickingFile(true);
+            let currentDraftId = draftId;
+            if (!currentDraftId) {
+                const res = await createComplaintDraftId();
+                currentDraftId = res.draftId;
+                setDraftId(res.draftId);
+            }
+            const picked = await pickAndUploadAttachment(
+                "Complaint",
+                currentDraftId,
+            );
+            setPendingFiles(prev => [...prev, picked]);
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Không thể đính kèm tệp",
+            });
+        } finally {
+            setPickingFile(false);
+        }
+    };
+
+    const handleRemovePendingFile = async (fileAssetId: string) => {
+        if (!draftId) return;
+        try {
+            await deleteComplaintAttachment(draftId, fileAssetId);
+            setPendingFiles(prev =>
+                prev.filter(f => f.fileAssetId !== fileAssetId),
+            );
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Không thể xóa tệp đính kèm",
+            });
+        }
+    };
+
     const handleSubmit = async () => {
         if (!category) {
             openSnackbar({
@@ -95,7 +154,7 @@ const ComplaintCreatePageContent: React.FC = () => {
                 title: title.trim(),
                 content: content.trim(),
                 area: area.trim() || undefined,
-                images: [],
+                draftId: draftId || undefined,
             });
             setCreated(complaint);
         } catch (err: any) {
@@ -218,6 +277,61 @@ const ComplaintCreatePageContent: React.FC = () => {
                         value={area}
                         onChange={e => setArea(e.target.value)}
                     />
+                </Box>
+
+                <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
+                    <Box
+                        flex
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={pendingFiles.length > 0 ? 2 : 0}
+                    >
+                        <Text.Title size="small">
+                            Tài liệu đính kèm (không bắt buộc)
+                        </Text.Title>
+                        <Box
+                            flex
+                            alignItems="center"
+                            className="text-main"
+                            onClick={pickingFile ? undefined : handlePickFile}
+                        >
+                            <Icon icon="zi-plus" />
+                            <Text size="xSmall" className="text-main ml-1">
+                                {pickingFile ? "Đang tải lên..." : "Đính kèm"}
+                            </Text>
+                        </Box>
+                    </Box>
+
+                    {pendingFiles.map(file => (
+                        <Box
+                            key={file.fileAssetId}
+                            flex
+                            alignItems="center"
+                            justifyContent="space-between"
+                            py={2}
+                            className="border-b border-divider_01 last:border-0"
+                        >
+                            <Box
+                                flex
+                                alignItems="center"
+                                style={{ flex: 1, minWidth: 0 }}
+                            >
+                                <Icon icon="zi-file" className="text-text_2" />
+                                <Text size="small" className="ml-2 truncate">
+                                    {extractFileNameFromUrl(file.url)}
+                                </Text>
+                            </Box>
+                            <Box
+                                onClick={() =>
+                                    handleRemovePendingFile(file.fileAssetId)
+                                }
+                                style={{ flexShrink: 0 }}
+                                pl={3}
+                            >
+                                <Icon icon="zi-close" className="text-text_3" />
+                            </Box>
+                        </Box>
+                    ))}
                 </Box>
 
                 <Box mt={6}>

@@ -1,16 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { Box, Text, useNavigate } from "zmp-ui";
 import { HomeHeader, AppBottomNav, PageLayout } from "@components/layout";
-import { Utinities } from "@components/utilities";
 import {
     HomeInfoBanner,
     EmergencyContactBox,
     ContactInfoBox,
+    FeaturesCard,
 } from "@components/home";
 import { hasPermission } from "@components/role";
-import { APP_UTINITIES, EMERGENCY_HOTLINES } from "@constants/utinities";
+import {
+    APP_UTINITIES,
+    MORE_FEATURES,
+    EMERGENCY_HOTLINES,
+    MiniAppFeatureConfigEntry,
+    resolveFeatureOrder,
+} from "@constants/utinities";
 import { fetchPublicAnnouncements } from "@service/announcementApi";
-import { LOAI_THONG_BAO_LABEL } from "@constants/domain";
+import { fetchPublicSettings } from "@service/settingsApi";
+import {
+    LOAI_THONG_BAO_LABEL,
+    APP_NAME_DEFAULT,
+    APP_NAME_HOUSE_OWNER,
+} from "@constants/domain";
 import { Announcement } from "@dts";
 import { useStore } from "@store";
 
@@ -22,16 +33,31 @@ const HomePage: React.FunctionComponent = () => {
     );
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
+    const [featureConfig, setFeatureConfig] = useState<
+        MiniAppFeatureConfigEntry[] | undefined
+    >(undefined);
 
-    const utinities = APP_UTINITIES.filter(
-        item =>
-            !item.requiredPermission ||
-            hasPermission(user, item.requiredPermission),
-    ).map(item => ({
-        ...item,
-        showBadge:
-            item.key === "meetings" ? hasUnreadMeetingNotification : undefined,
-    }));
+    const appName =
+        user?.primaryRole === "house_owner"
+            ? APP_NAME_HOUSE_OWNER
+            : APP_NAME_DEFAULT;
+
+    const features = resolveFeatureOrder(
+        [...APP_UTINITIES, ...MORE_FEATURES],
+        featureConfig,
+    )
+        .filter(
+            item =>
+                !item.requiredPermission ||
+                hasPermission(user, item.requiredPermission),
+        )
+        .map(item => ({
+            ...item,
+            showBadge:
+                item.key === "meetings"
+                    ? hasUnreadMeetingNotification
+                    : undefined,
+        }));
 
     useEffect(() => {
         fetchPublicAnnouncements(1, 3)
@@ -40,18 +66,30 @@ const HomePage: React.FunctionComponent = () => {
             .finally(() => setLoading(false));
     }, []);
 
+    useEffect(() => {
+        fetchPublicSettings()
+            .then(settings =>
+                setFeatureConfig(
+                    settings.mini_app_features as
+                        | MiniAppFeatureConfigEntry[]
+                        | undefined,
+                ),
+            )
+            .catch(() => setFeatureConfig(undefined));
+    }, []);
+
     return (
         <PageLayout
             id="home-page"
-            customHeader={<HomeHeader title="Tổ dân phố Hòa Bình" />}
+            customHeader={<HomeHeader title={appName} />}
             bottomNav={<AppBottomNav />}
         >
             <HomeInfoBanner
-                title="Tổ dân phố Hòa Bình"
+                title={appName}
                 address="Phường Dương Nội, TP Hà Nội"
             />
 
-            <Utinities utinities={utinities} />
+            <FeaturesCard features={features} />
 
             <Box className="bg-white mt-2 p-4">
                 <Box
@@ -65,7 +103,10 @@ const HomePage: React.FunctionComponent = () => {
                         size="xSmall"
                         className="text-main"
                         onClick={() =>
-                            navigate("/announcements", { animate: true })
+                            navigate("/notifications", {
+                                animate: true,
+                                state: { tab: "announcements" },
+                            })
                         }
                     >
                         Xem tất cả
@@ -104,7 +145,7 @@ const HomePage: React.FunctionComponent = () => {
 
             <ContactInfoBox
                 title="Thông tin liên hệ tổ dân phố"
-                description="Tổ trưởng tổ dân phố Hòa Bình, phường Dương Nội, TP Hà Nội"
+                description="Tổ trưởng tổ dân phố, phường Dương Nội, TP Hà Nội"
             />
         </PageLayout>
     );

@@ -12,6 +12,11 @@ import {
 import { fetchUnreadNotificationCount } from "@service/notificationApi";
 import { requestNotificationPermission } from "@service/zalo";
 import { ROLE_LABEL } from "@constants/domain";
+import {
+    createChangeRequest,
+    fetchMyChangeRequests,
+} from "@service/changeRequestApi";
+import { ChangeRequest } from "@dts";
 
 const AccountPage: React.FC = () => (
     <RequireAuth>
@@ -29,21 +34,39 @@ const AccountPageContent: React.FC = () => {
     ]);
 
     const [editing, setEditing] = useState(false);
-    const [displayName, setDisplayName] = useState(user?.displayName || "");
     const [phone, setPhone] = useState(user?.phone || "");
+    const [email, setEmail] = useState(user?.email || "");
     const [address, setAddress] = useState(user?.address || "");
     const [saving, setSaving] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
 
     const [changingPassword, setChangingPassword] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [settingPassword, setSettingPassword] = useState(false);
+
+    const [requestingNameChange, setRequestingNameChange] = useState(false);
+    const [nameRequest, setNameRequest] = useState("");
+    const [nameRequestReason, setNameRequestReason] = useState("");
+    const [sendingNameRequest, setSendingNameRequest] = useState(false);
+    const [pendingNameRequest, setPendingNameRequest] =
+        useState<ChangeRequest | null>(null);
 
     useEffect(() => {
         fetchUnreadNotificationCount()
             .then(res => setUnreadCount(res.count))
             .catch(() => setUnreadCount(0));
+    }, []);
+
+    useEffect(() => {
+        fetchMyChangeRequests(1, 20, "pending")
+            .then(res =>
+                setPendingNameRequest(
+                    res.items.find(r => r.targetModel === "User") || null,
+                ),
+            )
+            .catch(() => setPendingNameRequest(null));
     }, []);
 
     if (!user) return null;
@@ -52,8 +75,8 @@ const AccountPageContent: React.FC = () => {
         try {
             setSaving(true);
             const updated = await updateMyProfile({
-                displayName,
                 phone,
+                email,
                 address,
             });
             setUser(updated);
@@ -66,6 +89,38 @@ const AccountPageContent: React.FC = () => {
             });
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleRequestNameChange = async () => {
+        if (!nameRequest.trim()) {
+            openSnackbar({ type: "error", text: "Vui lòng nhập họ tên mới" });
+            return;
+        }
+        try {
+            setSendingNameRequest(true);
+            const created = await createChangeRequest({
+                targetModel: "User",
+                targetId: user.id,
+                changeType: "update",
+                patch: { displayName: nameRequest.trim() },
+                reason: nameRequestReason.trim() || undefined,
+            });
+            setPendingNameRequest(created);
+            setRequestingNameChange(false);
+            setNameRequest("");
+            setNameRequestReason("");
+            openSnackbar({
+                type: "success",
+                text: "Đã gửi yêu cầu đổi tên, chờ duyệt",
+            });
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Có lỗi xảy ra",
+            });
+        } finally {
+            setSendingNameRequest(false);
         }
     };
 
@@ -113,7 +168,8 @@ const AccountPageContent: React.FC = () => {
         }
         try {
             setSettingPassword(true);
-            await setPasswordApi(newPassword);
+            await setPasswordApi(newPassword, currentPassword || undefined);
+            setCurrentPassword("");
             setNewPassword("");
             setConfirmNewPassword("");
             setChangingPassword(false);
@@ -210,16 +266,18 @@ const AccountPageContent: React.FC = () => {
 
                     {editing ? (
                         <>
-                            <Input
-                                label="Họ tên"
-                                value={displayName}
-                                onChange={e => setDisplayName(e.target.value)}
-                            />
                             <Box mt={3}>
                                 <Input
                                     label="Số điện thoại"
                                     value={phone}
                                     onChange={e => setPhone(e.target.value)}
+                                />
+                            </Box>
+                            <Box mt={3}>
+                                <Input
+                                    label="Email"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
                                 />
                             </Box>
                             <Box mt={3}>
@@ -253,6 +311,10 @@ const AccountPageContent: React.FC = () => {
                                 value={user.phone || "Chưa cập nhật"}
                             />
                             <InfoRow
+                                label="Email"
+                                value={user.email || "Chưa cập nhật"}
+                            />
+                            <InfoRow
                                 label="Địa chỉ"
                                 value={user.address || "Chưa cập nhật"}
                             />
@@ -268,81 +330,167 @@ const AccountPageContent: React.FC = () => {
                     )}
                 </Box>
 
-                {import.meta.env.DEV && (
-                    <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
-                        <Box
-                            flex
-                            justifyContent="space-between"
-                            alignItems="center"
-                            mb={changingPassword ? 2 : 0}
-                        >
-                            <Box>
-                                <Text.Title size="small">Bảo mật</Text.Title>
-                                <Text size="xxSmall" className="text-text_2">
-                                    {user.phone
-                                        ? "Đăng nhập bằng số điện thoại + mật khẩu"
-                                        : "Đặt mật khẩu để có thể đăng nhập bằng số điện thoại"}
-                                </Text>
-                            </Box>
-                            {!changingPassword && (
-                                <Text
-                                    size="xSmall"
-                                    className="text-main"
-                                    onClick={() => setChangingPassword(true)}
-                                >
-                                    Đặt mật khẩu
-                                </Text>
-                            )}
+                <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
+                    <Box
+                        flex
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={pendingNameRequest || requestingNameChange ? 2 : 0}
+                    >
+                        <Box>
+                            <Text.Title size="small">Họ tên</Text.Title>
+                            <Text size="xxSmall" className="text-text_2">
+                                {user.displayName}
+                            </Text>
                         </Box>
-
-                        {changingPassword && (
-                            <>
-                                <Box mt={3}>
-                                    <Input
-                                        type="password"
-                                        label="Mật khẩu mới"
-                                        value={newPassword}
-                                        onChange={e =>
-                                            setNewPassword(e.target.value)
-                                        }
-                                    />
-                                </Box>
-                                <Box mt={3}>
-                                    <Input
-                                        type="password"
-                                        label="Nhập lại mật khẩu mới"
-                                        value={confirmNewPassword}
-                                        onChange={e =>
-                                            setConfirmNewPassword(
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
-                                </Box>
-                                <Box mt={4} flex style={{ gap: 8 }}>
-                                    <Button
-                                        variant="secondary"
-                                        fullWidth
-                                        onClick={() => {
-                                            setChangingPassword(false);
-                                            setNewPassword("");
-                                            setConfirmNewPassword("");
-                                        }}
-                                    >
-                                        Hủy
-                                    </Button>
-                                    <Button
-                                        fullWidth
-                                        loading={settingPassword}
-                                        onClick={handleSetPassword}
-                                    >
-                                        Lưu
-                                    </Button>
-                                </Box>
-                            </>
+                        {!requestingNameChange && !pendingNameRequest && (
+                            <Text
+                                size="xSmall"
+                                className="text-main"
+                                onClick={() => {
+                                    setNameRequest(user.displayName);
+                                    setRequestingNameChange(true);
+                                }}
+                            >
+                                Yêu cầu đổi tên
+                            </Text>
                         )}
                     </Box>
-                )}
+
+                    {pendingNameRequest && !requestingNameChange && (
+                        <Text size="xxSmall" className="text-text_2">
+                            Yêu cầu đổi tên thành &quot;
+                            {String(
+                                pendingNameRequest.patch?.displayName || "",
+                            )}
+                            &quot; đang chờ duyệt.
+                        </Text>
+                    )}
+
+                    {requestingNameChange && (
+                        <>
+                            <Box mt={3}>
+                                <Input
+                                    label="Họ tên mới"
+                                    value={nameRequest}
+                                    onChange={e =>
+                                        setNameRequest(e.target.value)
+                                    }
+                                />
+                            </Box>
+                            <Box mt={3}>
+                                <Input
+                                    label="Lý do (không bắt buộc)"
+                                    value={nameRequestReason}
+                                    onChange={e =>
+                                        setNameRequestReason(e.target.value)
+                                    }
+                                />
+                            </Box>
+                            <Box mt={4} flex style={{ gap: 8 }}>
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    onClick={() =>
+                                        setRequestingNameChange(false)
+                                    }
+                                >
+                                    Hủy
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    loading={sendingNameRequest}
+                                    onClick={handleRequestNameChange}
+                                >
+                                    Gửi yêu cầu
+                                </Button>
+                            </Box>
+                        </>
+                    )}
+                </Box>
+
+                <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
+                    <Box
+                        flex
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={changingPassword ? 2 : 0}
+                    >
+                        <Box>
+                            <Text.Title size="small">Bảo mật</Text.Title>
+                            <Text size="xxSmall" className="text-text_2">
+                                {user.phone
+                                    ? "Đăng nhập bằng số điện thoại + mật khẩu"
+                                    : "Đặt mật khẩu để có thể đăng nhập bằng số điện thoại"}
+                            </Text>
+                        </Box>
+                        {!changingPassword && (
+                            <Text
+                                size="xSmall"
+                                className="text-main"
+                                onClick={() => setChangingPassword(true)}
+                            >
+                                Đặt mật khẩu
+                            </Text>
+                        )}
+                    </Box>
+
+                    {changingPassword && (
+                        <>
+                            <Box mt={3}>
+                                <Input
+                                    type="password"
+                                    label="Mật khẩu hiện tại"
+                                    value={currentPassword}
+                                    onChange={e =>
+                                        setCurrentPassword(e.target.value)
+                                    }
+                                />
+                            </Box>
+                            <Box mt={3}>
+                                <Input
+                                    type="password"
+                                    label="Mật khẩu mới"
+                                    value={newPassword}
+                                    onChange={e =>
+                                        setNewPassword(e.target.value)
+                                    }
+                                />
+                            </Box>
+                            <Box mt={3}>
+                                <Input
+                                    type="password"
+                                    label="Nhập lại mật khẩu mới"
+                                    value={confirmNewPassword}
+                                    onChange={e =>
+                                        setConfirmNewPassword(e.target.value)
+                                    }
+                                />
+                            </Box>
+                            <Box mt={4} flex style={{ gap: 8 }}>
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    onClick={() => {
+                                        setChangingPassword(false);
+                                        setCurrentPassword("");
+                                        setNewPassword("");
+                                        setConfirmNewPassword("");
+                                    }}
+                                >
+                                    Hủy
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    loading={settingPassword}
+                                    onClick={handleSetPassword}
+                                >
+                                    Lưu
+                                </Button>
+                            </Box>
+                        </>
+                    )}
+                </Box>
 
                 <Box
                     className="bg-white rounded-2xl p-4 shadow-sm mt-3"
@@ -374,6 +522,34 @@ const AccountPageContent: React.FC = () => {
                         )}
                         <Icon icon="zi-chevron-right" className="text-text_3" />
                     </Box>
+                </Box>
+
+                <Box
+                    className="bg-white rounded-2xl p-4 shadow-sm mt-3"
+                    flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    onClick={() =>
+                        navigate("/requests/mine", { animate: true })
+                    }
+                >
+                    <Text.Title size="small">Nhiệm vụ của tôi</Text.Title>
+                    <Icon icon="zi-chevron-right" className="text-text_3" />
+                </Box>
+
+                <Box
+                    className="bg-white rounded-2xl p-4 shadow-sm mt-3"
+                    flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    onClick={() =>
+                        navigate("/change-requests/mine", { animate: true })
+                    }
+                >
+                    <Text.Title size="small">
+                        Yêu cầu thay đổi thông tin của tôi
+                    </Text.Title>
+                    <Icon icon="zi-chevron-right" className="text-text_3" />
                 </Box>
 
                 <Box

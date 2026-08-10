@@ -16,22 +16,32 @@ export const API = {
     AUTH_ME: "/api/auth/me",
     AUTH_LOGOUT: "/api/auth/logout",
 
+    USERS_ASSIGNABLE_STAFF: "/api/users/assignable-staff",
     HOUSES: "/api/houses",
+    ORGANIZATIONS: "/api/organizations",
     HOUSEHOLDS: "/api/households",
     HOUSEHOLDS_LOOKUP: "/api/households/lookup",
     CITIZENS: "/api/citizens",
+    STREETS: "/api/streets",
     NEIGHBORHOODS: "/api/neighborhoods",
     BUSINESSES: "/api/businesses",
     BUSINESS_TYPES: "/api/business-types",
+    COMPANIES: "/api/companies",
 
     COMPLAINTS: "/api/complaints",
     COMPLAINTS_MINE: "/api/complaints/mine",
     COMPLAINTS_LOOKUP: "/api/complaints/lookup",
+    COMPLAINTS_DRAFT: "/api/complaints/draft",
 
     SUPPORT_TICKETS: "/api/support-tickets",
     SUPPORT_TICKETS_MINE: "/api/support-tickets/mine",
 
     ANNOUNCEMENTS: "/api/announcements",
+    CORRESPONDENCE_TYPES: "/api/correspondence-types",
+    CORRESPONDENCES: "/api/correspondences",
+    CHANGE_REQUESTS: "/api/change-requests",
+    REQUESTS: "/api/requests",
+    REQUESTS_MY: "/api/requests/my",
     MEETINGS: "/api/meetings",
     SURVEYS: "/api/surveys",
 
@@ -41,10 +51,11 @@ export const API = {
 
     FILES: "/api/files",
     SETTINGS: "/api/settings",
+
+    UPLOADS_TOKEN: "/api/uploads/token",
+    UPLOADS_ATTACHMENTS: "/api/uploads/attachments",
 };
 
 export const SEARCH_NOT_FOUND = "Không tìm thấy thông tin";
 
 export const DEFAULT_PAGE_SIZE = 10;
-
-export const MAX_COMPLAINT_IMAGES = 4;
