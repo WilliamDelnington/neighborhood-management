@@ -5,6 +5,7 @@ import {
     FileAsset,
     Household,
     House,
+    HouseLookupItem,
     HousePhysicalStatus,
     HouseStatus,
     HouseUsageType,
@@ -37,6 +38,17 @@ export const fetchHouses = (params: {
 
 export const fetchHouseById = (id: string): Promise<House> =>
     request<House>("GET", `${API.HOUSES}/${id}`);
+
+/**
+ * Tim kiem nha so rut gon, KHONG loc theo pham vi so huu/phu trach (khac
+ * fetchHouses) - dung rieng cho luong chon "nha so lien quan" khi gui phan
+ * anh, vi nguoi gui co the bao ve mot nha khong phai cua ho. Chi can quyen
+ * complaints.create (khong phai houses.read).
+ */
+export const searchHouseTargets = (
+    search?: string,
+): Promise<HouseLookupItem[]> =>
+    request<HouseLookupItem[]>("GET", `${API.HOUSES}/lookup`, { search });
 
 export const fetchHouseHouseholds = (
     id: string,

@@ -14,6 +14,11 @@ export interface CreateComplaintParams {
     title: string;
     content: string;
     area?: string;
+    // Nha so nguoi gui chu dong chon (khong bat buoc, khong can la nha cua
+    // chinh ho - vd bao phan anh ve nha hang xom). Neu co, backend dung
+    // to dan pho cua chinh nha nay de gui toi To truong phu trach, thay vi
+    // suy tu ho khau/nha cua nguoi gui - xem complaintService.createComplaint.
+    houseId?: string;
     // Id da xin truoc qua createComplaintDraftId(), dung khi nguoi dung da
     // dinh kem tai lieu ngay tren form tao (xem uploadApi.pickAndUploadAttachment
     // voi relatedModel="Complaint") truoc khi bam "Gui" - backend se dung id
