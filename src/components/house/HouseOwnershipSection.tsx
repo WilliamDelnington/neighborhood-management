@@ -17,10 +17,18 @@ import {
     endHouseOwnership,
     fetchHouseOwnerships,
 } from "@service/houseOwnershipApi";
+import { createChangeRequest } from "@service/changeRequestApi";
 
 export interface HouseOwnershipSectionProps {
     houseId: string;
     canManage: boolean;
+    // Id cua nguoi dang dang nhap - dung de phan biet "dang ket thuc CHINH
+    // quan he cua minh" (phai gui yeu cau duyet, xem backend
+    // houseOwnershipService.endHouseOwnership) voi "nhan vien ket thuc quan he
+    // cua nguoi khac" (van lam truc tiep nhu cu). Chi xu ly dung cho
+    // ownerType="user" - quan he do to chuc dai dien (ownerType="organization")
+    // van di truc tiep (xem ghi chu trong changeRequestService.ts o backend).
+    currentUserId?: string;
 }
 
 /**
@@ -33,6 +41,7 @@ export interface HouseOwnershipSectionProps {
 const HouseOwnershipSection: React.FC<HouseOwnershipSectionProps> = ({
     houseId,
     canManage,
+    currentUserId,
 }) => {
     const { openSnackbar } = useSnackbar();
     const [ownerships, setOwnerships] = useState<HouseOwnership[]>([]);
@@ -53,15 +62,32 @@ const HouseOwnershipSection: React.FC<HouseOwnershipSectionProps> = ({
 
     useEffect(load, [houseId]);
 
+    const isMine = (o: HouseOwnership) =>
+        o.ownerType === "user" &&
+        !!currentUserId &&
+        o.ownerId === currentUserId;
+
     const handleEnd = async () => {
         if (!endTarget) return;
         try {
             setEnding(true);
-            await endHouseOwnership(houseId, endTarget._id);
-            openSnackbar({
-                type: "success",
-                text: "Đã kết thúc quan hệ sở hữu",
-            });
+            if (isMine(endTarget)) {
+                await createChangeRequest({
+                    targetModel: "HouseOwnership",
+                    targetId: endTarget._id,
+                    changeType: "unlink",
+                });
+                openSnackbar({
+                    type: "success",
+                    text: "Đã gửi yêu cầu hủy liên kết, chờ duyệt",
+                });
+            } else {
+                await endHouseOwnership(houseId, endTarget._id);
+                openSnackbar({
+                    type: "success",
+                    text: "Đã kết thúc quan hệ sở hữu",
+                });
+            }
             setEndTarget(null);
             load();
         } catch (err) {
@@ -182,16 +208,22 @@ const HouseOwnershipSection: React.FC<HouseOwnershipSectionProps> = ({
 
             <Modal
                 visible={!!endTarget}
-                title="Kết thúc quan hệ sở hữu?"
+                title={
+                    endTarget && isMine(endTarget)
+                        ? "Gửi yêu cầu hủy liên kết?"
+                        : "Kết thúc quan hệ sở hữu?"
+                }
                 description={
                     endTarget
                         ? `${
                               HOUSE_OWNERSHIP_RELATIONSHIP_TYPE_LABEL[
                                   endTarget.relationshipType
                               ]
-                          } — ${
-                              endTarget.ownerDisplayName || "Không rõ"
-                          }. Hành động này giữ lại lịch sử, không thể hoàn tác.`
+                          } — ${endTarget.ownerDisplayName || "Không rõ"}. ${
+                              isMine(endTarget)
+                                  ? "Yêu cầu sẽ được gửi tới cán bộ phụ trách để duyệt."
+                                  : "Hành động này giữ lại lịch sử, không thể hoàn tác."
+                          }`
                         : undefined
                 }
                 onClose={() => setEndTarget(null)}
@@ -202,7 +234,10 @@ const HouseOwnershipSection: React.FC<HouseOwnershipSectionProps> = ({
                         onClick: () => setEndTarget(null),
                     },
                     {
-                        text: "Kết thúc",
+                        text:
+                            endTarget && isMine(endTarget)
+                                ? "Gửi yêu cầu"
+                                : "Kết thúc",
                         danger: true,
                         onClick: handleEnd,
                         disabled: ending,

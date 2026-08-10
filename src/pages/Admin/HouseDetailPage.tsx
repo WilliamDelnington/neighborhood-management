@@ -79,6 +79,21 @@ import { createBusiness } from "@service/businessApi";
 import { createHousehold } from "@service/householdApi";
 import { createCompany } from "@service/companyApi";
 import { fetchOrganizationById } from "@service/organizationApi";
+import { createChangeRequest } from "@service/changeRequestApi";
+
+// Truong "dinh danh/dia chi" cua nha so - mot khi nha da "verified", chu nha
+// (khong phai nhan vien) phai gui ChangeRequest cho cac truong nay thay vi
+// sua truc tiep (xem HOUSE_RECORD_PROTECTED_FIELDS trong houseRecordService.ts
+// o backend - danh sach nay la ban rut gon, chi gom cac truong ma HouseForm
+// cua Mini App nay thuc su co UI de sua).
+const HOUSE_PROTECTED_FIELDS = [
+    "address",
+    "cluster",
+    "streetId",
+    "neighborhoodId",
+    "usageTypes",
+    "otherUsageNote",
+] as const;
 
 const toFormValues = (h: House): HouseFormValues => ({
     cluster: h.cluster,
@@ -266,7 +281,7 @@ const HouseDetailContent: React.FC = () => {
     if (!id) return null;
 
     const handleSave = async () => {
-        if (!form) return;
+        if (!form || !house) return;
         if (!isHouseFormValid(form)) {
             openSnackbar({
                 type: "error",
@@ -274,13 +289,82 @@ const HouseDetailContent: React.FC = () => {
             });
             return;
         }
+
+        const fullInput = toHouseInput(form) as unknown as Record<
+            string,
+            unknown
+        >;
+        // Neu nha da xac minh VA chinh chu nha (khong phai nhan vien) dang sua:
+        // tach truong dinh danh/dia chi da thay doi thanh mot ChangeRequest,
+        // cac truong con lai (physicalStatus/note) van ap dung truc tiep nhu cu.
+        const needsApproval = house.status === "verified" && isOwner;
+        if (!needsApproval) {
+            try {
+                setSaving(true);
+                const updated = await updateHouse(id, toHouseInput(form));
+                setHouse(updated);
+                setForm(toFormValues(updated));
+                setEditing(false);
+                openSnackbar({ type: "success", text: "Đã cập nhật nhà số" });
+            } catch (err) {
+                openSnackbar({
+                    type: "error",
+                    text: (err as AppError).message,
+                });
+            } finally {
+                setSaving(false);
+            }
+            return;
+        }
+
+        const originalInput = toHouseInput(
+            toFormValues(house),
+        ) as unknown as Record<string, unknown>;
+        const protectedPatch: Record<string, unknown> = {};
+        for (const key of HOUSE_PROTECTED_FIELDS) {
+            if (
+                JSON.stringify(fullInput[key]) !==
+                JSON.stringify(originalInput[key])
+            ) {
+                protectedPatch[key] = fullInput[key];
+            }
+        }
+        const freePatch: Record<string, unknown> = {};
+        if (fullInput.physicalStatus !== originalInput.physicalStatus) {
+            freePatch.physicalStatus = fullInput.physicalStatus;
+        }
+        if (fullInput.note !== originalInput.note) {
+            freePatch.note = fullInput.note;
+        }
+
         try {
             setSaving(true);
-            const updated = await updateHouse(id, toHouseInput(form));
+            let updated = house;
+            if (Object.keys(freePatch).length > 0) {
+                updated = await updateHouse(id, freePatch);
+            }
+            if (Object.keys(protectedPatch).length > 0) {
+                await createChangeRequest({
+                    targetModel: "HouseRecord",
+                    targetId: id,
+                    changeType: "update",
+                    patch: protectedPatch,
+                });
+            }
             setHouse(updated);
             setForm(toFormValues(updated));
             setEditing(false);
-            openSnackbar({ type: "success", text: "Đã cập nhật nhà số" });
+            if (Object.keys(protectedPatch).length > 0) {
+                openSnackbar({
+                    type: "success",
+                    text:
+                        Object.keys(freePatch).length > 0
+                            ? "Đã lưu các thay đổi và gửi yêu cầu duyệt cho thông tin còn lại"
+                            : "Đã gửi yêu cầu thay đổi, chờ duyệt",
+                });
+            } else {
+                openSnackbar({ type: "success", text: "Đã cập nhật nhà số" });
+            }
         } catch (err) {
             openSnackbar({ type: "error", text: (err as AppError).message });
         } finally {
@@ -449,6 +533,8 @@ const HouseDetailContent: React.FC = () => {
     // (vd nha tao truoc khi co tinh nang khai bao muc dich su dung) - tranh
     // crash trang trang khi goi .includes()/.map() tren undefined.
     const houseUsageTypes = house?.usageTypes || [];
+    const street = streetName(house?.streetId ?? null);
+    const neighborhood = neighborhoodName(house?.neighborhoodId ?? null);
 
     return (
         <PageLayout id="admin-house-detail" title="Chi tiết nhà số">
@@ -507,20 +593,16 @@ const HouseDetailContent: React.FC = () => {
                                         label="Cụm dân cư"
                                         value={house.cluster}
                                     />
-                                    {streetName(house.streetId) && (
+                                    {street && (
                                         <InfoRow
                                             label="Đường/phố"
-                                            value={streetName(house.streetId)!}
+                                            value={street}
                                         />
                                     )}
-                                    {neighborhoodName(house.neighborhoodId) && (
+                                    {neighborhood && (
                                         <InfoRow
                                             label="Tổ dân phố"
-                                            value={
-                                                neighborhoodName(
-                                                    house.neighborhoodId,
-                                                )!
-                                            }
+                                            value={neighborhood}
                                         />
                                     )}
                                     <InfoRow
@@ -618,6 +700,7 @@ const HouseDetailContent: React.FC = () => {
                         <HouseOwnershipSection
                             houseId={id}
                             canManage={canUpdate}
+                            currentUserId={user?.id}
                         />
 
                         <AttachmentUploader

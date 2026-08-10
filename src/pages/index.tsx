@@ -33,6 +33,19 @@ const AnnouncementDetailPage = lazy(
     () => import("./Announcements/AnnouncementDetailPage"),
 );
 
+const CorrespondenceListPage = lazy(
+    () => import("./Correspondences/CorrespondenceListPage"),
+);
+const CorrespondenceDetailPage = lazy(
+    () => import("./Correspondences/CorrespondenceDetailPage"),
+);
+const CorrespondenceComposePage = lazy(
+    () => import("./Correspondences/CorrespondenceComposePage"),
+);
+const MyChangeRequestsPage = lazy(
+    () => import("./ChangeRequests/MyChangeRequestsPage"),
+);
+
 const NotificationsPage = lazy(
     () => import("./Notifications/NotificationsPage"),
 );
@@ -110,6 +123,24 @@ const Routes: React.FC = () => (
                 <Route
                     path="/announcements/:id"
                     element={<AnnouncementDetailPage />}
+                />
+
+                <Route
+                    path="/correspondences"
+                    element={<CorrespondenceListPage />}
+                />
+                <Route
+                    path="/correspondences/compose"
+                    element={<CorrespondenceComposePage />}
+                />
+                <Route
+                    path="/correspondences/:id"
+                    element={<CorrespondenceDetailPage />}
+                />
+
+                <Route
+                    path="/change-requests/mine"
+                    element={<MyChangeRequestsPage />}
                 />
 
                 <Route path="/meetings" element={<MeetingListPage />} />

@@ -16,6 +16,7 @@ export const API = {
     AUTH_ME: "/api/auth/me",
     AUTH_LOGOUT: "/api/auth/logout",
 
+    USERS_ASSIGNABLE_STAFF: "/api/users/assignable-staff",
     HOUSES: "/api/houses",
     ORGANIZATIONS: "/api/organizations",
     HOUSEHOLDS: "/api/households",
@@ -36,6 +37,9 @@ export const API = {
     SUPPORT_TICKETS_MINE: "/api/support-tickets/mine",
 
     ANNOUNCEMENTS: "/api/announcements",
+    CORRESPONDENCE_TYPES: "/api/correspondence-types",
+    CORRESPONDENCES: "/api/correspondences",
+    CHANGE_REQUESTS: "/api/change-requests",
     MEETINGS: "/api/meetings",
     SURVEYS: "/api/surveys",
 

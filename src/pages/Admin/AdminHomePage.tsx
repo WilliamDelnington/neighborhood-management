@@ -23,6 +23,7 @@ const AdminHomeContent: React.FC = () => {
     const canViewHouses = hasPermission(user, "houses.read");
     const canViewBusinessTypes = hasPermission(user, "business_types.read");
     const canViewBusinesses = hasPermission(user, "businesses.read");
+    const canViewCorrespondences = hasPermission(user, "correspondences.read");
 
     return (
         <PageLayout
@@ -35,7 +36,8 @@ const AdminHomeContent: React.FC = () => {
                     canViewCitizens ||
                     canViewHouses ||
                     canViewBusinessTypes ||
-                    canViewBusinesses) && (
+                    canViewBusinesses ||
+                    canViewCorrespondences) && (
                     <Box px={4}>
                         {canViewHouses && (
                             <ListRow
@@ -108,13 +110,25 @@ const AdminHomeContent: React.FC = () => {
                                 }
                             />
                         )}
+                        {canViewCorrespondences && (
+                            <ListRow
+                                title="Văn bản"
+                                subtitle="Công văn, báo cáo, đề xuất giữa phường/xã và tổ dân phố"
+                                onClick={() =>
+                                    navigate("/correspondences", {
+                                        animate: true,
+                                    })
+                                }
+                            />
+                        )}
                     </Box>
                 )}
                 {!canViewHouseholds &&
                     !canViewCitizens &&
                     !canViewHouses &&
                     !canViewBusinessTypes &&
-                    !canViewBusinesses && (
+                    !canViewBusinesses &&
+                    !canViewCorrespondences && (
                         <Box p={6}>
                             <Text
                                 size="small"

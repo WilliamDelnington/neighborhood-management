@@ -409,6 +409,80 @@ export type ComplaintDetail = {
 };
 
 // ---------------------------------------------------------------------------
+// Van ban (Cong van/Bao cao/De xuat/Kien nghi... - ca hai chieu Ward <-> To truong)
+// ---------------------------------------------------------------------------
+export type ChangeRequestTargetModel =
+    | "HouseRecord"
+    | "HouseOwnership"
+    | "User";
+export type ChangeRequestType = "update" | "unlink";
+export type ChangeRequestStatus =
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "cancelled";
+
+export type ChangeRequest = {
+    _id: string;
+    targetModel: ChangeRequestTargetModel;
+    targetId: string;
+    requestedBy: string | { _id: string; displayName: string };
+    changeType: ChangeRequestType;
+    patch?: Record<string, unknown>;
+    previousSnapshot?: Record<string, unknown>;
+    reason?: string;
+    status: ChangeRequestStatus;
+    decidedBy?: string | { _id: string; displayName: string };
+    decidedAt?: string;
+    decisionNote?: string;
+    createdAt: string;
+};
+
+export type CorrespondenceType = {
+    _id: string;
+    name: string;
+    code: string;
+    description?: string;
+    allowedSenderRoles: Role[];
+    allowedReceiverRoles: Role[];
+    requireDocumentNumber: boolean;
+    active: boolean;
+};
+
+export type CorrespondenceStatus = "nhap" | "da_gui";
+
+export type Correspondence = {
+    _id: string;
+    correspondenceTypeId:
+        | string
+        | Pick<CorrespondenceType, "_id" | "name" | "code">;
+    documentNumber?: string;
+    title: string;
+    content: string;
+    issuedAt: string;
+    status: CorrespondenceStatus;
+    isUrgent: boolean;
+    senderId: string;
+    targetNeighborhoodIds: string[];
+    targetUserIds: string[];
+    sentAt?: string;
+    createdAt: string;
+};
+
+export type CorrespondenceReply = {
+    _id: string;
+    correspondenceId: string;
+    content: string;
+    actorId: { _id: string; displayName: string } | string;
+    createdAt: string;
+};
+
+export type AssignableStaff = {
+    id: string;
+    displayName: string;
+};
+
+// ---------------------------------------------------------------------------
 // Ho tro (Ho so ca nhan)
 // ---------------------------------------------------------------------------
 export type LoaiYeuCauHoTro = "bao_loi" | "gop_y";
@@ -466,7 +540,6 @@ export type Meeting = {
     location: string;
     content: string;
     minutes?: string;
-    attachments: string[];
     published: boolean;
     createdAt: string;
 };

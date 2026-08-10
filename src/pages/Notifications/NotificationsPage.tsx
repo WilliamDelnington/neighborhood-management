@@ -23,6 +23,7 @@ const RELATED_MODEL_PATH: Record<string, string> = {
     Meeting: "/meetings",
     Survey: "/surveys",
     HouseRecord: "/admin/houses",
+    Correspondence: "/correspondences",
 };
 
 /**
