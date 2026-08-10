@@ -57,6 +57,35 @@ export const lookupComplaintByCode = (code: string): Promise<ComplaintDetail> =>
 export const fetchComplaintDetail = (id: string): Promise<ComplaintDetail> =>
     request<ComplaintDetail>("GET", `${API.COMPLAINTS}/${id}`);
 
+export interface UpdateComplaintParams {
+    category?: NhomPhanAnh;
+    title?: string;
+    content?: string;
+}
+
+// Chi nguoi gui phan anh moi goi duoc (complaints.update_own) va chi khi phan
+// anh chua ket thuc (khong phai "dong"/"hoan_thanh") - xem complaintService.ts.
+export const updateComplaint = (
+    id: string,
+    params: UpdateComplaintParams,
+): Promise<Complaint> =>
+    request<Complaint>("PATCH", `${API.COMPLAINTS}/${id}`, params);
+
+// Nguoi gui tu xac nhan hai long voi ket qua xu ly - chi goi duoc khi trang
+// thai dang la "da_xu_ly".
+export const confirmComplaintResolution = (id: string): Promise<Complaint> =>
+    request<Complaint>("POST", `${API.COMPLAINTS}/${id}/confirm-resolution`);
+
+// Nguoi gui de nghi xem xet lai - gioi han 1 lan/phan anh, chi goi duoc khi
+// trang thai dang la "da_xu_ly" (xem requestComplaintReevaluation o backend).
+export const requestComplaintReevaluation = (
+    id: string,
+    note: string,
+): Promise<Complaint> =>
+    request<Complaint>("POST", `${API.COMPLAINTS}/${id}/request-reevaluation`, {
+        note,
+    });
+
 export interface FetchComplaintsParams {
     page?: number;
     limit?: number;

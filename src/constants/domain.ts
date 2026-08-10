@@ -15,6 +15,9 @@ import type {
     MucDoAnNinh,
     MucNguyCoPccc,
     NhomPhanAnh,
+    RequestPriority,
+    RequestStatus,
+    RequestType,
     Role,
     TrangThaiPhanAnh,
     TrangThaiYeuCauHoTro,
@@ -48,6 +51,7 @@ export const NHOM_PHAN_ANH_LABEL: Record<NhomPhanAnh, string> = {
     tranh_chap_dan_cu: "Tranh chấp dân cư",
     tam_tru_nha_cho_thue: "Tạm trú / nhà cho thuê",
     gop_y_chung: "Góp ý chung",
+    ha_tang: "Hạ tầng (đường, cống, cây, rác...)",
     khac: "Khác",
 };
 
@@ -57,7 +61,43 @@ export const TRANG_THAI_PHAN_ANH_LABEL: Record<TrangThaiPhanAnh, string> = {
     dang_xu_ly: "Đang xử lý",
     da_chuyen_ubnd: "Đã chuyển UBND phường",
     da_xu_ly: "Đã xử lý",
+    hoan_thanh: "Hoàn thành",
     dong: "Đóng",
+    can_bo_sung: "Cần bổ sung thông tin",
+};
+
+export const REQUEST_TYPE_LABEL: Record<RequestType, string> = {
+    pccc: "PCCC",
+    security: "An ninh",
+    other: "Khác",
+    task: "Nhiệm vụ",
+};
+
+export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
+    pending: "Chưa xử lý",
+    acknowledged: "Đã tiếp nhận",
+    in_progress: "Đang xử lý",
+    needs_info: "Yêu cầu bổ sung",
+    awaiting_confirmation: "Chờ xác nhận",
+    resolved: "Đã hoàn thành",
+};
+
+export const REQUEST_STATUS_TONE: Record<
+    RequestStatus,
+    "gray" | "blue" | "yellow" | "green" | "red"
+> = {
+    pending: "gray",
+    acknowledged: "blue",
+    in_progress: "yellow",
+    needs_info: "red",
+    awaiting_confirmation: "blue",
+    resolved: "green",
+};
+
+export const REQUEST_PRIORITY_LABEL: Record<RequestPriority, string> = {
+    normal: "Bình thường",
+    high: "Cao",
+    urgent: "Khẩn cấp",
 };
 
 export const TRANG_THAI_PHAN_ANH_TONE: Record<
@@ -69,7 +109,9 @@ export const TRANG_THAI_PHAN_ANH_TONE: Record<
     dang_xu_ly: "yellow",
     da_chuyen_ubnd: "blue",
     da_xu_ly: "green",
+    hoan_thanh: "green",
     dong: "gray",
+    can_bo_sung: "red",
 };
 
 export const LOAI_YEU_CAU_HO_TRO_LABEL: Record<LoaiYeuCauHoTro, string> = {

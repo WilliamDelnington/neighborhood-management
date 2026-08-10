@@ -530,11 +530,24 @@ const AccountPageContent: React.FC = () => {
                     justifyContent="space-between"
                     alignItems="center"
                     onClick={() =>
+                        navigate("/requests/mine", { animate: true })
+                    }
+                >
+                    <Text.Title size="small">Nhiệm vụ của tôi</Text.Title>
+                    <Icon icon="zi-chevron-right" className="text-text_3" />
+                </Box>
+
+                <Box
+                    className="bg-white rounded-2xl p-4 shadow-sm mt-3"
+                    flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    onClick={() =>
                         navigate("/change-requests/mine", { animate: true })
                     }
                 >
                     <Text.Title size="small">
-                        Yêu cầu thay đổi của tôi
+                        Yêu cầu thay đổi thông tin của tôi
                     </Text.Title>
                     <Icon icon="zi-chevron-right" className="text-text_3" />
                 </Box>

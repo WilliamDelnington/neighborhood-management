@@ -116,7 +116,7 @@ const MyChangeRequestsContent: React.FC = () => {
     return (
         <PageLayout
             id="my-change-requests-page"
-            title="Yêu cầu thay đổi của tôi"
+            title="Yêu cầu thay đổi thông tin của tôi"
             bottomNav={<AppBottomNav />}
         >
             <Box p={4}>
@@ -125,7 +125,7 @@ const MyChangeRequestsContent: React.FC = () => {
                     <ErrorState onRetry={() => load(1, false)} />
                 )}
                 {!loading && !error && items.length === 0 && (
-                    <EmptyState label="Bạn chưa gửi yêu cầu thay đổi nào" />
+                    <EmptyState label="Bạn chưa gửi yêu cầu thay đổi thông tin nào" />
                 )}
                 {!loading &&
                     !error &&

@@ -14,6 +14,18 @@ export interface ComplaintTimelineViewProps {
     timeline: ComplaintTimelineEntry[];
 }
 
+const EDITED_FIELD_LABEL: Record<string, string> = {
+    category: "Loại phản ánh",
+    title: "Tiêu đề",
+    content: "Nội dung",
+};
+
+const entryTitle = (entry: ComplaintTimelineEntry): string => {
+    if (entry.action === "reevaluation_request") return "Đề nghị xem xét lại";
+    if (entry.action === "edited") return "Đã chỉnh sửa phản ánh";
+    return TRANG_THAI_PHAN_ANH_LABEL[entry.status];
+};
+
 /**
  * Khoi hien thi thong tin phan anh + lich su xu ly (timeline), dung chung cho man hinh
  * ket qua tra cuu theo ma va man hinh chi tiet phan anh de tranh trung lap JSX.
@@ -88,13 +100,32 @@ const ComplaintTimelineView: React.FC<ComplaintTimelineViewProps> = ({
                     </Box>
                     <Box pb={4} style={{ flex: 1 }}>
                         <Text size="small" className="font-medium">
-                            {TRANG_THAI_PHAN_ANH_LABEL[entry.status]}
+                            {entryTitle(entry)}
                         </Text>
                         {entry.note && (
                             <Text size="xSmall" className="text-text_2 mt-1">
                                 {entry.note}
                             </Text>
                         )}
+                        {entry.action === "edited" &&
+                            entry.patch &&
+                            Object.entries(entry.patch).map(
+                                ([field, value]) => (
+                                    <Text
+                                        key={field}
+                                        size="xxSmall"
+                                        className="text-text_2 mt-1"
+                                    >
+                                        {EDITED_FIELD_LABEL[field] || field}:{" "}
+                                        {String(
+                                            entry.previousSnapshot?.[field] ??
+                                                "",
+                                        )}
+                                        {" → "}
+                                        {String(value)}
+                                    </Text>
+                                ),
+                            )}
                         <Text size="xxSmall" className="text-text_3 mt-1">
                             {formatDateTime(new Date(entry.createdAt))}
                         </Text>

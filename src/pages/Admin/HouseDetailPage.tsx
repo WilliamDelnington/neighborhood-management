@@ -360,7 +360,7 @@ const HouseDetailContent: React.FC = () => {
                     text:
                         Object.keys(freePatch).length > 0
                             ? "Đã lưu các thay đổi và gửi yêu cầu duyệt cho thông tin còn lại"
-                            : "Đã gửi yêu cầu thay đổi, chờ duyệt",
+                            : "Đã gửi yêu cầu thay đổi thông tin, chờ duyệt",
                 });
             } else {
                 openSnackbar({ type: "success", text: "Đã cập nhật nhà số" });

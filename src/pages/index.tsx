@@ -45,6 +45,7 @@ const CorrespondenceComposePage = lazy(
 const MyChangeRequestsPage = lazy(
     () => import("./ChangeRequests/MyChangeRequestsPage"),
 );
+const MyRequestsPage = lazy(() => import("./Requests/MyRequestsPage"));
 
 const NotificationsPage = lazy(
     () => import("./Notifications/NotificationsPage"),
@@ -142,6 +143,7 @@ const Routes: React.FC = () => (
                     path="/change-requests/mine"
                     element={<MyChangeRequestsPage />}
                 />
+                <Route path="/requests/mine" element={<MyRequestsPage />} />
 
                 <Route path="/meetings" element={<MeetingListPage />} />
                 <Route path="/meetings/:id" element={<MeetingDetailPage />} />

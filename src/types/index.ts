@@ -363,6 +363,7 @@ export type NhomPhanAnh =
     | "tranh_chap_dan_cu"
     | "tam_tru_nha_cho_thue"
     | "gop_y_chung"
+    | "ha_tang"
     | "khac";
 
 export type TrangThaiPhanAnh =
@@ -371,7 +372,14 @@ export type TrangThaiPhanAnh =
     | "dang_xu_ly"
     | "da_chuyen_ubnd"
     | "da_xu_ly"
-    | "dong";
+    | "hoan_thanh"
+    | "dong"
+    | "can_bo_sung";
+
+export type ComplaintTimelineAction =
+    | "status_update"
+    | "edited"
+    | "reevaluation_request";
 
 export type Complaint = {
     _id: string;
@@ -397,7 +405,10 @@ export type ComplaintTimelineEntry = {
     _id: string;
     complaintId: string;
     status: TrangThaiPhanAnh;
+    action: ComplaintTimelineAction;
     note?: string;
+    patch?: Record<string, unknown>;
+    previousSnapshot?: Record<string, unknown>;
     isPublic: boolean;
     actorId: string;
     createdAt: string;
@@ -610,4 +621,52 @@ export type Utinity = {
     phoneNumber?: string;
     requiredPermission?: string;
     showBadge?: boolean;
+};
+
+// ---------------------------------------------------------------------------
+// Yeu cau cong viec (Request) - chi phan resident-facing (xem "cua toi": nhan
+// nhiem vu tu To truong/To pho, tu cap nhat trang thai). Khong bao gom phan
+// tao/gan cua nhan vien (chi co o admin web).
+// ---------------------------------------------------------------------------
+export const REQUEST_TYPES = ["pccc", "security", "other", "task"] as const;
+export type RequestType = typeof REQUEST_TYPES[number];
+
+export const REQUEST_STATUSES = [
+    "pending",
+    "acknowledged",
+    "in_progress",
+    "needs_info",
+    "awaiting_confirmation",
+    "resolved",
+] as const;
+export type RequestStatus = typeof REQUEST_STATUSES[number];
+
+export const REQUEST_PRIORITIES = ["normal", "high", "urgent"] as const;
+export type RequestPriority = typeof REQUEST_PRIORITIES[number];
+
+export type RequestComment = {
+    _id: string;
+    entityType: "Request";
+    entityId: string;
+    authorId: string | { _id: string; displayName: string };
+    content: string;
+    createdAt: string;
+};
+
+export type MyRequestItem = {
+    _id: string;
+    requestId: string;
+    type: RequestType;
+    title: string;
+    description?: string;
+    priority: RequestPriority;
+    houseId?: string | { _id: string; code: string; address: string } | null;
+    dueDate?: string;
+    createdBy?: string | { _id: string; displayName: string };
+    createdAt: string;
+    status: RequestStatus;
+    note?: string;
+    respondedAt?: string;
+    resolvedAt?: string;
+    isOverdue: boolean;
 };
