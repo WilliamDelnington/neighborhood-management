@@ -46,6 +46,7 @@ const MyChangeRequestsPage = lazy(
     () => import("./ChangeRequests/MyChangeRequestsPage"),
 );
 const MyRequestsPage = lazy(() => import("./Requests/MyRequestsPage"));
+const MyHousePage = lazy(() => import("./House/MyHousePage"));
 
 const NotificationsPage = lazy(
     () => import("./Notifications/NotificationsPage"),
@@ -144,6 +145,7 @@ const Routes: React.FC = () => (
                     element={<MyChangeRequestsPage />}
                 />
                 <Route path="/requests/mine" element={<MyRequestsPage />} />
+                <Route path="/house/mine" element={<MyHousePage />} />
 
                 <Route path="/meetings" element={<MeetingListPage />} />
                 <Route path="/meetings/:id" element={<MeetingDetailPage />} />

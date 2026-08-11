@@ -64,6 +64,7 @@ export type HouseStatus =
     | "pending"
     | "verified"
     | "denied"
+    | "needs_update"
     | "locked";
 
 // Trang thai xac thuc dung chung cho House/Household/Business - ba thuc the
@@ -144,6 +145,10 @@ export type House = {
     // representativeUserId (xem HouseDetailPage.tsx).
     ownerId?: string | { _id: string; displayName: string };
     note?: string;
+    approvalNote?: string;
+    denialReason?: string;
+    needsUpdateNote?: string;
+    residenceDeclarationNumber?: string;
     createdAt: string;
     updatedAt: string;
 };
@@ -292,6 +297,10 @@ export type Company = {
     houseId: string | House;
     cluster: string;
     ownerName?: string;
+    // Lien ket tuy chon toi mot Organization co san - chua co UI chon/hien thi
+    // trong mini app (chi admin web app), them field de du lieu day du khi
+    // can dung sau nay.
+    organizationId?: { _id: string; name: string } | string | null;
     phone?: string;
     active: boolean;
     status: VerificationStatus;
@@ -300,6 +309,44 @@ export type Company = {
     note?: string;
     createdAt: string;
     updatedAt: string;
+};
+
+// Rut gon tu HouseUsageUnit o backend, populate san ten hien thi cua doi tuong
+// da gan (chinh xac MOT trong ba truong duoi day co gia tri, khop usageType) -
+// dung cho man "Nha cua toi" (xem app/api/houses/mine o backend), khong can
+// goi rieng cac API households/businesses/companies.
+export type MyHouseUsageUnit = {
+    _id: string;
+    unitLabel: string;
+    usageType: HouseUsageType;
+    // Backend populate dung MOT trong ba truong nay (khop usageType) - xem
+    // houseUsageUnitService.listHouseUsageUnitsByHouse.
+    householdId?: {
+        _id: string;
+        code: string;
+        headOfHousehold?: string;
+        status: VerificationStatus;
+    } | null;
+    businessId?: {
+        _id: string;
+        name: string;
+        status: VerificationStatus;
+    } | null;
+    companyId?: {
+        _id: string;
+        name: string;
+        status: VerificationStatus;
+    } | null;
+    note?: string;
+};
+
+// Ket qua GET /api/houses/mine - mot phan tu cho moi nha ma nguoi dang dang
+// nhap dang "thao tac thay chu nha" (co the nhieu hon mot, xem
+// houseOwnershipService.getHouseIdsForActingOwner o backend).
+export type MyHouseOverviewItem = {
+    house: House;
+    ownerships: HouseOwnership[];
+    usageUnits: MyHouseUsageUnit[];
 };
 
 type PopulatedFileAssetSummary = {
