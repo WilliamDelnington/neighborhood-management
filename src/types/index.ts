@@ -148,6 +148,16 @@ export type House = {
     updatedAt: string;
 };
 
+// Ket qua rut gon tu GET /api/houses/lookup - dung rieng cho luong chon "nha
+// so lien quan" khi gui phan anh (khong loc theo pham vi so huu/phu trach,
+// khong tra ve du lieu nhay cam nhu chu so huu/trang thai xac minh).
+export type HouseLookupItem = {
+    _id: string;
+    code: string;
+    address?: string;
+    cluster?: string;
+};
+
 export type HouseOwnershipRelationshipType =
     | "primary_owner"
     | "co_owner"

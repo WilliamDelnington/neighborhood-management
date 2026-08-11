@@ -3,6 +3,7 @@ import { Box, Icon, Select, Text, useNavigate, useSnackbar } from "zmp-ui";
 import { PageLayout } from "@components/layout";
 import { Button, Input, TextArea } from "@components/customized";
 import { RequireAuth, hasPermission } from "@components/role";
+import { HouseTargetPickerSheet } from "@components/house";
 import {
     createComplaint,
     createComplaintDraftId,
@@ -10,7 +11,7 @@ import {
 } from "@service/complaintApi";
 import { pickAndUploadAttachment, PickedUpload } from "@service/uploadApi";
 import { NHOM_PHAN_ANH_LABEL } from "@constants/domain";
-import { Complaint, NhomPhanAnh } from "@dts";
+import { Complaint, HouseLookupItem, NhomPhanAnh } from "@dts";
 import { useStore } from "@store";
 
 /**
@@ -40,6 +41,10 @@ const ComplaintCreatePageContent: React.FC = () => {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [area, setArea] = useState("");
+    const [targetHouse, setTargetHouse] = useState<HouseLookupItem | null>(
+        null,
+    );
+    const [housePickerVisible, setHousePickerVisible] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [created, setCreated] = useState<Complaint | null>(null);
 
@@ -154,6 +159,7 @@ const ComplaintCreatePageContent: React.FC = () => {
                 title: title.trim(),
                 content: content.trim(),
                 area: area.trim() || undefined,
+                houseId: targetHouse?._id,
                 draftId: draftId || undefined,
             });
             setCreated(complaint);
@@ -278,6 +284,59 @@ const ComplaintCreatePageContent: React.FC = () => {
                         onChange={e => setArea(e.target.value)}
                     />
                 </Box>
+
+                <Box mt={3}>
+                    <Text
+                        size="xSmall"
+                        className="font-medium text-text_1 mb-2"
+                    >
+                        Nhà số liên quan (không bắt buộc)
+                    </Text>
+                    {targetHouse ? (
+                        <Box
+                            flex
+                            alignItems="center"
+                            justifyContent="space-between"
+                            p={3}
+                            className="bg-ng_10 rounded-xl"
+                        >
+                            <Box style={{ minWidth: 0, flex: 1 }}>
+                                <Text size="small" bold className="truncate">
+                                    {targetHouse.code}
+                                    {targetHouse.address
+                                        ? ` — ${targetHouse.address}`
+                                        : ""}
+                                </Text>
+                            </Box>
+                            <Box
+                                onClick={() => setTargetHouse(null)}
+                                pl={3}
+                                style={{ flexShrink: 0 }}
+                            >
+                                <Icon icon="zi-close" className="text-text_3" />
+                            </Box>
+                        </Box>
+                    ) : (
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => setHousePickerVisible(true)}
+                        >
+                            Chọn nhà số
+                        </Button>
+                    )}
+                    <Text size="xSmall" className="text-text_2 mt-1.5">
+                        Có thể chọn bất kỳ nhà số nào liên quan đến phản ánh,
+                        không nhất thiết là nhà của bạn. Nếu chọn, phản ánh sẽ
+                        được gửi tới Tổ trưởng phụ trách nhà số đó.
+                    </Text>
+                </Box>
+
+                <HouseTargetPickerSheet
+                    visible={housePickerVisible}
+                    onClose={() => setHousePickerVisible(false)}
+                    onSelect={house => setTargetHouse(house)}
+                />
 
                 <Box className="bg-white rounded-2xl p-4 shadow-sm mt-3">
                     <Box
