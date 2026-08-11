@@ -144,6 +144,7 @@ export const HOUSE_STATUS_LABEL: Record<HouseStatus, string> = {
     pending: "Chờ duyệt",
     verified: "Đã xác thực",
     denied: "Từ chối",
+    needs_update: "Cần bổ sung thông tin",
     locked: "Đã khóa",
 };
 
@@ -202,6 +203,7 @@ export const HOUSE_STATUS_TONE: Record<
     pending: "yellow",
     verified: "green",
     denied: "red",
+    needs_update: "yellow",
     locked: "gray",
 };
 

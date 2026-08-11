@@ -7,6 +7,7 @@ export interface LoginWithZaloParams {
     zaloUserId: string;
     name?: string;
     avatarUrl?: string;
+    phoneToken?: string;
     phone?: string;
 }
 

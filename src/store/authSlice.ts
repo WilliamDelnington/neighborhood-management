@@ -1,6 +1,11 @@
 import { User } from "@dts";
 import { StateCreator } from "zustand";
-import { getToken, getZaloUserInfo, authorizeUserInfo } from "@service/zalo";
+import {
+    getToken,
+    getZaloUserInfo,
+    getPhoneNumber,
+    authorizeUserInfo,
+} from "@service/zalo";
 import {
     loginWithZalo,
     loginWithPhone,
@@ -85,11 +90,21 @@ const authSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set, get) => ({
                 zaloUserId = `sandbox-${accessToken}`;
             }
 
+            // getPhoneNumber returns a one-time code. The backend exchanges
+            // it with Zalo and links the verified phone to the Zalo identity.
+            const phoneToken = await getPhoneNumber();
+            if (!phoneToken && import.meta.env.PROD) {
+                throw new Error(
+                    "Vui lòng cho phép chia sẻ số điện thoại để liên kết tài khoản chủ hộ",
+                );
+            }
+
             const { token, user } = await loginWithZalo({
                 accessToken,
                 zaloUserId,
                 name,
                 avatarUrl,
+                phoneToken,
             });
 
             // Neu trong luc cho phan hoi tu backend, mot luot dang nhap moi hon

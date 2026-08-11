@@ -45,13 +45,12 @@ export const APP_UTINITIES: Array<Utinity> = [
  */
 export const MORE_FEATURES: Array<Utinity> = [
     {
-        key: "admin-houses",
-        label: "Nhà số của tôi",
+        key: "my-house",
+        label: "Nhà của tôi",
         icon: Icon.HouseIcon,
         color: "#0891B2",
         bgColor: "#CFFAFE",
-        path: "/admin/houses",
-        requiredPermission: "houses.read",
+        path: "/house/mine",
     },
     {
         key: "admin-households",

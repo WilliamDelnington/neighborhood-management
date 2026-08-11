@@ -18,6 +18,7 @@ export const API = {
 
     USERS_ASSIGNABLE_STAFF: "/api/users/assignable-staff",
     HOUSES: "/api/houses",
+    HOUSES_MINE: "/api/houses/mine",
     ORGANIZATIONS: "/api/organizations",
     HOUSEHOLDS: "/api/households",
     HOUSEHOLDS_LOOKUP: "/api/households/lookup",
