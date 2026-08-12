@@ -52,6 +52,9 @@ export async function request<T>(
                 },
             );
         }
+    } else if (data instanceof FormData) {
+        // Trình duyệt tự đặt multipart boundary; không gắn Content-Type thủ công.
+        requestOptions.body = data;
     } else {
         headers.append("Content-Type", "application/json");
         requestOptions.body = JSON.stringify(data ?? {});

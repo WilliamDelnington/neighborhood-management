@@ -39,6 +39,7 @@ const ComplaintDetailPageContent: React.FC = () => {
     const [saving, setSaving] = useState(false);
 
     const [confirming, setConfirming] = useState(false);
+    const [rating, setRating] = useState(0);
     const [requestingReeval, setRequestingReeval] = useState(false);
     const [reevalNote, setReevalNote] = useState("");
     const [sendingReeval, setSendingReeval] = useState(false);
@@ -119,7 +120,7 @@ const ComplaintDetailPageContent: React.FC = () => {
         if (!id) return;
         try {
             setConfirming(true);
-            await confirmComplaintResolution(id);
+            await confirmComplaintResolution(id, rating || undefined);
             openSnackbar({ type: "success", text: "Đã xác nhận hoàn thành" });
             load();
         } catch (err: any) {
@@ -268,6 +269,36 @@ const ComplaintDetailPageContent: React.FC = () => {
                                 >
                                     Bạn đã hài lòng với kết quả xử lý chưa?
                                 </Text>
+
+                                {!requestingReeval && (
+                                    <Box
+                                        flex
+                                        justifyContent="center"
+                                        mb={3}
+                                        style={{ gap: 4 }}
+                                    >
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <Text
+                                                key={star}
+                                                size="large"
+                                                className={
+                                                    star <= rating
+                                                        ? "text-yellow-500"
+                                                        : "text-divider_01"
+                                                }
+                                                onClick={() =>
+                                                    setRating(
+                                                        star === rating
+                                                            ? 0
+                                                            : star,
+                                                    )
+                                                }
+                                            >
+                                                ★
+                                            </Text>
+                                        ))}
+                                    </Box>
+                                )}
 
                                 {!requestingReeval ? (
                                     <Box flex style={{ gap: 8 }}>

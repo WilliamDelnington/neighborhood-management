@@ -6,11 +6,16 @@ import { RequireAuth } from "@components/role";
 import { useStore } from "@store";
 import {
     updateMyProfile,
+    changePhone,
     setPassword as setPasswordApi,
     logout as logoutApi,
 } from "@service/authApi";
 import { fetchUnreadNotificationCount } from "@service/notificationApi";
-import { requestNotificationPermission } from "@service/zalo";
+import {
+    requestNotificationPermission,
+    getToken as getZaloAccessToken,
+    getPhoneNumber as getZaloPhoneNumber,
+} from "@service/zalo";
 import { ROLE_LABEL } from "@constants/domain";
 import {
     createChangeRequest,
@@ -34,11 +39,11 @@ const AccountPageContent: React.FC = () => {
     ]);
 
     const [editing, setEditing] = useState(false);
-    const [phone, setPhone] = useState(user?.phone || "");
     const [email, setEmail] = useState(user?.email || "");
     const [address, setAddress] = useState(user?.address || "");
     const [saving, setSaving] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [changingPhone, setChangingPhone] = useState(false);
 
     const [changingPassword, setChangingPassword] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
@@ -75,7 +80,6 @@ const AccountPageContent: React.FC = () => {
         try {
             setSaving(true);
             const updated = await updateMyProfile({
-                phone,
                 email,
                 address,
             });
@@ -89,6 +93,39 @@ const AccountPageContent: React.FC = () => {
             });
         } finally {
             setSaving(false);
+        }
+    };
+
+    /**
+     * Doi so dien thoai - xac thuc lai qua Zalo (KHONG cho go tay o form
+     * chinh sua thong tin nua, xem changePhoneSchema o backend) vi day la
+     * thong tin dang nhap.
+     */
+    const handleChangePhone = async () => {
+        try {
+            setChangingPhone(true);
+            const accessToken = await getZaloAccessToken();
+            const phoneToken = await getZaloPhoneNumber();
+            if (!phoneToken) {
+                openSnackbar({
+                    type: "error",
+                    text: "Bạn cần cho phép Zalo chia sẻ số điện thoại để đổi số",
+                });
+                return;
+            }
+            const updated = await changePhone(accessToken, phoneToken);
+            setUser(updated);
+            openSnackbar({
+                type: "success",
+                text: "Đã đổi số điện thoại thành công",
+            });
+        } catch (err: any) {
+            openSnackbar({
+                type: "error",
+                text: err?.message || "Không thể đổi số điện thoại",
+            });
+        } finally {
+            setChangingPhone(false);
         }
     };
 
@@ -268,13 +305,6 @@ const AccountPageContent: React.FC = () => {
                         <>
                             <Box mt={3}>
                                 <Input
-                                    label="Số điện thoại"
-                                    value={phone}
-                                    onChange={e => setPhone(e.target.value)}
-                                />
-                            </Box>
-                            <Box mt={3}>
-                                <Input
                                     label="Email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
@@ -310,6 +340,21 @@ const AccountPageContent: React.FC = () => {
                                 label="Số điện thoại"
                                 value={user.phone || "Chưa cập nhật"}
                             />
+                            <Box flex justifyContent="flex-end" py={1}>
+                                <Text
+                                    size="xxSmall"
+                                    className="text-main"
+                                    onClick={
+                                        changingPhone
+                                            ? undefined
+                                            : handleChangePhone
+                                    }
+                                >
+                                    {changingPhone
+                                        ? "Đang xử lý..."
+                                        : "Đổi số điện thoại"}
+                                </Text>
+                            </Box>
                             <InfoRow
                                 label="Email"
                                 value={user.email || "Chưa cập nhật"}
@@ -560,6 +605,19 @@ const AccountPageContent: React.FC = () => {
                     onClick={() => navigate("/support", { animate: true })}
                 >
                     <Text.Title size="small">Hỗ trợ</Text.Title>
+                    <Icon icon="zi-chevron-right" className="text-text_3" />
+                </Box>
+
+                <Box
+                    className="bg-white rounded-2xl p-4 shadow-sm mt-3"
+                    flex
+                    justifyContent="space-between"
+                    alignItems="center"
+                    onClick={() =>
+                        navigate("/account/history", { animate: true })
+                    }
+                >
+                    <Text.Title size="small">Lịch sử tương tác</Text.Title>
                     <Icon icon="zi-chevron-right" className="text-text_3" />
                 </Box>
 

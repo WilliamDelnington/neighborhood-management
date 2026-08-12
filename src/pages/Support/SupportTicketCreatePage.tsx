@@ -42,6 +42,16 @@ const PAGE_COPY: Record<
         submitLabel: "Gửi góp ý",
         successTitle: "Gửi góp ý thành công",
     },
+    ho_tro_ho_dan: {
+        pageTitle: "Hỗ trợ hộ dân",
+        titleLabel: "Tiêu đề yêu cầu",
+        titlePlaceholder: "VD: Cần hỗ trợ làm hồ sơ tạm trú",
+        contentLabel: "Nội dung cần hỗ trợ",
+        contentPlaceholder:
+            "Mô tả vấn đề cần Tổ dân phố/Phường hỗ trợ giúp gia đình bạn...",
+        submitLabel: "Gửi yêu cầu hỗ trợ",
+        successTitle: "Gửi yêu cầu hỗ trợ thành công",
+    },
 };
 
 const SupportTicketCreatePage: React.FC<SupportTicketCreatePageProps> = ({

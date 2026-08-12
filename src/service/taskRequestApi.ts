@@ -1,5 +1,6 @@
 import { API } from "@constants/common";
 import {
+    FileAsset,
     MyRequestItem,
     PaginatedData,
     RequestComment,
@@ -56,3 +57,23 @@ export const createRequestComment = (
     request<RequestComment>("POST", `${API.REQUESTS}/${requestId}/comments`, {
         content,
     });
+
+/**
+ * Tai lieu minh chung dinh kem cua mot Request - dung cho AttachmentUploader
+ * tren "Nhiệm vụ của tôi" (xem app/api/requests/[id]/attachments o backend,
+ * quyen xem giong xem chinh Request - quan ly hoac nguoi nhan).
+ */
+export const fetchRequestAttachments = (
+    requestId: string,
+): Promise<FileAsset[]> =>
+    request<FileAsset[]>("GET", `${API.REQUESTS}/${requestId}/attachments`);
+
+/**
+ * Backend chua co API xoa tai lieu dinh kem cua Request (khac House/Business/
+ * Complaint) - stub nay chi de khop kieu prop bat buoc cua AttachmentUploader,
+ * KHONG duoc goi thuc te vi component chi hien nut xoa khi canDelete=true
+ * (luon truyen false o MyRequestsPage).
+ */
+export const deleteRequestAttachment = (): Promise<null> => {
+    throw new Error("Chưa hỗ trợ xóa tài liệu đính kèm của nhiệm vụ");
+};

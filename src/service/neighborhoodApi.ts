@@ -1,5 +1,5 @@
 import { API } from "@constants/common";
-import { Neighborhood, PaginatedData } from "@dts";
+import { MyNeighborhoodInfo, Neighborhood, PaginatedData } from "@dts";
 import { request } from "./request";
 
 /**
@@ -25,3 +25,11 @@ export const fetchNeighborhoods = (
 
 export const fetchNeighborhoodById = (id: string): Promise<Neighborhood> =>
     request<Neighborhood>("GET", `${API.NEIGHBORHOODS}/${id}`);
+
+/**
+ * To dan pho (cac to) gan voi nha cua nguoi dang dang nhap, chi tra ve truong
+ * cong khai an toan - xem app/api/neighborhoods/mine o backend. Khac
+ * fetchNeighborhoods o tren (yeu cau neighborhoods.read, danh cho nhan vien).
+ */
+export const fetchMyNeighborhoods = (): Promise<MyNeighborhoodInfo[]> =>
+    request<MyNeighborhoodInfo[]>("GET", API.NEIGHBORHOODS_MINE);

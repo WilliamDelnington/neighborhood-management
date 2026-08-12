@@ -38,7 +38,20 @@ const AnnouncementDetailPage: React.FC = () => {
                     <Box className="bg-white rounded-2xl p-4 shadow-sm">
                         <Text size="xxSmall" className="text-main font-medium">
                             {LOAI_THONG_BAO_LABEL[announcement.category]}
+                            {" · "}
+                            {announcement.neighborhoodId &&
+                            typeof announcement.neighborhoodId !== "string"
+                                ? `Tổ dân phố ${announcement.neighborhoodId.name}`
+                                : "Phường"}
                         </Text>
+                        {announcement.isUrgent && (
+                            <Text
+                                size="xxSmall"
+                                className="text-red-600 font-medium mt-1"
+                            >
+                                🔴 Thông báo khẩn cấp
+                            </Text>
+                        )}
                         <Text.Title size="small" className="mt-1">
                             {announcement.pinned ? "📌 " : ""}
                             {announcement.title}

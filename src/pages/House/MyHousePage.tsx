@@ -201,7 +201,10 @@ const MyHouseContent: React.FC = () => {
                                 {neighborhood && (
                                     <Text
                                         size="xSmall"
-                                        className="text-text_2 mt-2"
+                                        className="text-main mt-2"
+                                        onClick={() =>
+                                            navigate("/neighborhood/mine")
+                                        }
                                     >
                                         Tổ dân phố: {neighborhood.name}
                                         {neighborhood.contactPhone

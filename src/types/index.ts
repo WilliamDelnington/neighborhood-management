@@ -349,6 +349,46 @@ export type MyHouseOverviewItem = {
     usageUnits: MyHouseUsageUnit[];
 };
 
+// Ket qua GET /api/dashboard/mine (C01) - moi so lieu chi tinh tren du lieu
+// CUA CHINH nguoi dang dang nhap, khac dashboard thong ke cho nhan vien
+// (xem dashboardService.getMyHouseDashboard o backend).
+export type MyHouseDashboard = {
+    unreadNotifications: number;
+    myRequestCounts: { inProgress: number; dueSoon: number; overdue: number };
+    activeComplaints: number;
+    openSupportTickets: number;
+    pendingSurveys: number;
+    upcomingMeetings: Array<{
+        id: string;
+        title: string;
+        startTime: string;
+        location?: string;
+    }>;
+    hasLinkedHouse: boolean;
+};
+
+// Ket qua GET /api/neighborhoods/mine (C03) - cac truong cong khai an toan
+// cua to dan pho gan voi nha cua nguoi dang dang nhap (xem
+// app/api/neighborhoods/mine o backend).
+export type MyNeighborhoodInfo = {
+    neighborhood: {
+        _id: string;
+        name: string;
+        address?: string;
+        description?: string;
+        contactPhone?: string;
+        leaderUserId?: {
+            _id: string;
+            displayName: string;
+            phone?: string;
+        } | null;
+    };
+    coleaders: Array<{
+        _id: string;
+        coleaderUserId: { _id: string; displayName: string; phone?: string };
+    }>;
+};
+
 type PopulatedFileAssetSummary = {
     _id: string;
     name: string;
@@ -454,6 +494,8 @@ export type Complaint = {
     actualCompletionDate?: string;
     escalatedToCommittee: boolean;
     internalNotes?: string;
+    rating?: number;
+    ratingNote?: string;
     createdAt: string;
     updatedAt: string;
 };
@@ -553,9 +595,14 @@ export type AssignableStaff = {
 // ---------------------------------------------------------------------------
 // Ho tro (Ho so ca nhan)
 // ---------------------------------------------------------------------------
-export type LoaiYeuCauHoTro = "bao_loi" | "gop_y";
+export type LoaiYeuCauHoTro = "bao_loi" | "gop_y" | "ho_tro_ho_dan";
 
-export type TrangThaiYeuCauHoTro = "moi" | "dang_xu_ly" | "da_xu_ly" | "dong";
+export type TrangThaiYeuCauHoTro =
+    | "moi"
+    | "dang_xu_ly"
+    | "can_bo_sung"
+    | "da_xu_ly"
+    | "dong";
 
 export type SupportTicket = {
     _id: string;
@@ -595,6 +642,10 @@ export type Announcement = {
     status: "nhap" | "da_dang";
     priority: boolean;
     pinned: boolean;
+    isUrgent: boolean;
+    // undefined/null = dang boi Phuong (admin/secretary); co gia tri = dang
+    // boi To dan pho cu the - xem models/Announcement.ts o backend.
+    neighborhoodId?: { _id: string; name: string } | string | null;
     publishedAt?: string;
     createdAt: string;
 };
@@ -701,9 +752,11 @@ export type RequestStatus = typeof REQUEST_STATUSES[number];
 export const REQUEST_PRIORITIES = ["normal", "high", "urgent"] as const;
 export type RequestPriority = typeof REQUEST_PRIORITIES[number];
 
+// Dung chung cho trao doi tren Request VA SupportTicket (C12) - cung mo hinh
+// Comment o backend, chi khac entityType.
 export type RequestComment = {
     _id: string;
-    entityType: "Request";
+    entityType: "Request" | "SupportTicket";
     entityId: string;
     authorId: string | { _id: string; displayName: string };
     content: string;
@@ -726,4 +779,107 @@ export type MyRequestItem = {
     respondedAt?: string;
     resolvedAt?: string;
     isOverdue: boolean;
+};
+
+// ---------------------------------------------------------------------------
+// Rà soát / chiến dịch (B07)
+// ---------------------------------------------------------------------------
+export type InspectionCampaignStatus = "DRAFT" | "ACTIVE" | "LOCKED" | "CLOSED";
+export type InspectionResultStatus =
+    | "PENDING"
+    | "DRAFT"
+    | "SUBMITTED"
+    | "VERIFIED"
+    | "REQUEST_REVISION"
+    | "FIELD_CHECK_REQUIRED";
+export type InspectionOutcome = "PASS" | "FAIL" | "NEEDS_SUPPLEMENT";
+export type InspectionChecklistItem = {
+    itemId: string;
+    label: string;
+    inputType: "BOOLEAN" | "TEXT" | "NUMBER" | "SINGLE_SELECT" | "MULTI_SELECT";
+    required: boolean;
+    options?: string[];
+};
+export type InspectionSummary = {
+    totalHouses: number;
+    pass: number;
+    fail: number;
+    unchecked: number;
+    needsSupplement: number;
+    pending: number;
+    draft: number;
+    submitted: number;
+    verified: number;
+};
+export type InspectionCampaign = {
+    _id: string;
+    name: string;
+    purpose: string;
+    checklistTemplate: InspectionChecklistItem[];
+    allowSelfDeclaration: boolean;
+    requiredEvidence: boolean;
+    startAt: string;
+    dueAt: string;
+    status: InspectionCampaignStatus;
+    summary?: InspectionSummary;
+    availableNeighborhoods?: Array<{ _id: string; code: string; name: string }>;
+};
+export type InspectionTarget = {
+    _id: string;
+    campaignId: string;
+    houseId:
+        | string
+        | { _id: string; code: string; address: string; cluster?: string };
+    neighborhoodId: string;
+    assignedCollaboratorUserId?: string | { _id: string; displayName: string };
+    selfDeclarationStatus: "NOT_SENT" | "SENT" | "SUBMITTED";
+    resultStatus: InspectionResultStatus;
+    result?: {
+        _id: string;
+        status: InspectionResultStatus;
+        outcome?: InspectionOutcome;
+    } | null;
+    campaign?: InspectionCampaign;
+};
+export type InspectionResult = {
+    _id: string;
+    targetId: string;
+    submittedBy: "HOUSE" | "NEIGHBORHOOD";
+    gpsLat?: number;
+    gpsLng?: number;
+    note?: string;
+    outcome?: InspectionOutcome;
+    reviewNote?: string;
+    status: InspectionResultStatus;
+    target: InspectionTarget;
+    campaign: InspectionCampaign;
+    answers: Array<{ _id: string; checklistItemId: string; value: unknown }>;
+    attachments: FileAsset[];
+};
+export type InspectionSelfDeclarationDetail = {
+    target: InspectionTarget;
+    campaign: InspectionCampaign;
+    result: null | {
+        _id: string;
+        targetId: string;
+        submittedBy: "HOUSE";
+        submittedByUserId: string | { _id: string; displayName: string };
+        gpsLat?: number;
+        gpsLng?: number;
+        note?: string;
+        outcome?: InspectionOutcome;
+        reviewNote?: string;
+        status: InspectionResultStatus;
+        submittedAt?: string;
+        answers: Array<{
+            _id: string;
+            checklistItemId: string;
+            value: unknown;
+        }>;
+        attachments: FileAsset[];
+    };
+};
+export type InspectionSelfDeclarationListItem = {
+    target: InspectionTarget;
+    campaign: InspectionCampaign;
 };

@@ -5,6 +5,9 @@ import { AnimationRoutes, Spinner, ZMPRouter } from "zmp-ui";
 const HomePage = lazy(() => import("./Home/HomePage"));
 const LoginPage = lazy(() => import("./Login/LoginPage"));
 const AccountPage = lazy(() => import("./Account/AccountPage"));
+const InteractionHistoryPage = lazy(
+    () => import("./Account/InteractionHistoryPage"),
+);
 const EmergencyPage = lazy(() => import("./Emergency/EmergencyPage"));
 
 const ComplaintCreatePage = lazy(
@@ -16,6 +19,9 @@ const ComplaintLookupPage = lazy(
 const ComplaintDetailPage = lazy(
     () => import("./Complaints/ComplaintDetailPage"),
 );
+const IncidentShortcutPage = lazy(
+    () => import("./Complaints/IncidentShortcutPage"),
+);
 
 const SupportPage = lazy(() => import("./Support/SupportPage"));
 const SupportHowToUsePage = lazy(() => import("./Support/SupportHowToUsePage"));
@@ -24,6 +30,9 @@ const SupportTicketCreatePage = lazy(
 );
 const SupportTicketDetailPage = lazy(
     () => import("./Support/SupportTicketDetailPage"),
+);
+const MySupportTicketsPage = lazy(
+    () => import("./Support/MySupportTicketsPage"),
 );
 
 const AnnouncementListPage = lazy(
@@ -46,7 +55,25 @@ const MyChangeRequestsPage = lazy(
     () => import("./ChangeRequests/MyChangeRequestsPage"),
 );
 const MyRequestsPage = lazy(() => import("./Requests/MyRequestsPage"));
+const InspectionCampaignListPage = lazy(
+    () => import("./Inspections/InspectionCampaignListPage"),
+);
+const InspectionCampaignDetailPage = lazy(
+    () => import("./Inspections/InspectionCampaignDetailPage"),
+);
+const InspectionFieldCheckPage = lazy(
+    () => import("./Inspections/InspectionFieldCheckPage"),
+);
+const InspectionSelfDeclarationListPage = lazy(
+    () => import("./Inspections/InspectionSelfDeclarationListPage"),
+);
+const InspectionSelfDeclarationPage = lazy(
+    () => import("./Inspections/InspectionSelfDeclarationPage"),
+);
 const MyHousePage = lazy(() => import("./House/MyHousePage"));
+const NeighborhoodInfoPage = lazy(
+    () => import("./Neighborhood/NeighborhoodInfoPage"),
+);
 
 const NotificationsPage = lazy(
     () => import("./Notifications/NotificationsPage"),
@@ -84,6 +111,10 @@ const Routes: React.FC = () => (
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/account" element={<AccountPage />} />
+                <Route
+                    path="/account/history"
+                    element={<InteractionHistoryPage />}
+                />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/emergency" element={<EmergencyPage />} />
 
@@ -99,11 +130,19 @@ const Routes: React.FC = () => (
                     path="/complaints/:id"
                     element={<ComplaintDetailPage />}
                 />
+                <Route
+                    path="/complaints/incident-shortcut"
+                    element={<IncidentShortcutPage />}
+                />
 
                 <Route path="/support" element={<SupportPage />} />
                 <Route
                     path="/support/how-to-use"
                     element={<SupportHowToUsePage />}
+                />
+                <Route
+                    path="/support/household-assistance"
+                    element={<SupportTicketCreatePage type="ho_tro_ho_dan" />}
                 />
                 <Route
                     path="/support/report-bug"
@@ -112,6 +151,10 @@ const Routes: React.FC = () => (
                 <Route
                     path="/support/feedback"
                     element={<SupportTicketCreatePage type="gop_y" />}
+                />
+                <Route
+                    path="/support/tickets/mine"
+                    element={<MySupportTicketsPage />}
                 />
                 <Route
                     path="/support/tickets/:id"
@@ -145,7 +188,31 @@ const Routes: React.FC = () => (
                     element={<MyChangeRequestsPage />}
                 />
                 <Route path="/requests/mine" element={<MyRequestsPage />} />
+                <Route
+                    path="/inspections"
+                    element={<InspectionCampaignListPage />}
+                />
+                <Route
+                    path="/inspections/self-declarations"
+                    element={<InspectionSelfDeclarationListPage />}
+                />
+                <Route
+                    path="/inspections/self-declarations/:targetId"
+                    element={<InspectionSelfDeclarationPage />}
+                />
+                <Route
+                    path="/inspections/:id"
+                    element={<InspectionCampaignDetailPage />}
+                />
+                <Route
+                    path="/inspections/targets/:targetId"
+                    element={<InspectionFieldCheckPage />}
+                />
                 <Route path="/house/mine" element={<MyHousePage />} />
+                <Route
+                    path="/neighborhood/mine"
+                    element={<NeighborhoodInfoPage />}
+                />
 
                 <Route path="/meetings" element={<MeetingListPage />} />
                 <Route path="/meetings/:id" element={<MeetingDetailPage />} />

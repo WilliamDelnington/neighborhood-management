@@ -61,9 +61,10 @@ export const setPassword = (
 
 // displayName KHONG con o day - tu "danh tinh", chi sua duoc qua ChangeRequest
 // (xem changeRequestApi.ts) - email duoc them vao vi truoc gio ton tai tren
-// User nhung chua tung sua duoc qua man tu-cap-nhat nay.
+// User nhung chua tung sua duoc qua man tu-cap-nhat nay. phone CUNG KHONG con
+// o day (la thong tin dang nhap, doi qua changePhone o duoi, xac thuc lai qua
+// Zalo - xem changePhoneSchema o backend).
 export interface UpdateProfileParams {
-    phone?: string;
     email?: string;
     address?: string;
     householdId?: string;
@@ -72,6 +73,17 @@ export interface UpdateProfileParams {
 
 export const updateMyProfile = (params: UpdateProfileParams): Promise<User> =>
     request<User>("PATCH", API.AUTH_ME, params);
+
+/**
+ * Doi so dien thoai dang nhap - accessToken/phoneToken tu zmp-sdk
+ * (getToken/getPhoneNumber trong @service/zalo), xac thuc lai qua Zalo o
+ * backend (xem changeOwnPhone).
+ */
+export const changePhone = (
+    accessToken: string,
+    phoneToken?: string,
+): Promise<User> =>
+    request<User>("POST", API.AUTH_CHANGE_PHONE, { accessToken, phoneToken });
 
 export const logout = (): Promise<null> =>
     request<null>("POST", API.AUTH_LOGOUT);

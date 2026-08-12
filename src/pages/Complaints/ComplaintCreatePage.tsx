@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Box, Icon, Select, Text, useNavigate, useSnackbar } from "zmp-ui";
 import { PageLayout } from "@components/layout";
 import { Button, Input, TextArea } from "@components/customized";
@@ -33,12 +34,26 @@ const ComplaintCreatePage: React.FC = () => (
 
 const ComplaintCreatePageContent: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { openSnackbar } = useSnackbar();
     const user = useStore(state => state.user);
     const canCreate = hasPermission(user, "complaints.create");
 
-    const [category, setCategory] = useState<NhomPhanAnh | undefined>();
-    const [title, setTitle] = useState("");
+    // Loi vao tu man "Bao su co ha tang" (C11) - xem IncidentShortcutPage.tsx -
+    // chi dien san nhom + tien to tieu de, khong tao workflow rieng vi day van
+    // la mot Complaint thong thuong.
+    const incidentState = location.state as
+        | { presetCategory?: NhomPhanAnh; presetTitlePrefix?: string }
+        | undefined;
+
+    const [category, setCategory] = useState<NhomPhanAnh | undefined>(
+        incidentState?.presetCategory,
+    );
+    const [title, setTitle] = useState(
+        incidentState?.presetTitlePrefix
+            ? `${incidentState.presetTitlePrefix}: `
+            : "",
+    );
     const [content, setContent] = useState("");
     const [area, setArea] = useState("");
     const [targetHouse, setTargetHouse] = useState<HouseLookupItem | null>(

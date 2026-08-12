@@ -51,6 +51,22 @@ const SupportPageContent: React.FC = () => {
                     }
                 />
                 <SupportRow
+                    title="Yêu cầu hỗ trợ của tôi"
+                    description="Xem lại các yêu cầu hỗ trợ bạn đã gửi và trạng thái xử lý"
+                    onClick={() =>
+                        navigate("/support/tickets/mine", { animate: true })
+                    }
+                />
+                <SupportRow
+                    title="Hỗ trợ hộ dân"
+                    description="Đề nghị Tổ dân phố/Phường hỗ trợ một vấn đề của gia đình bạn"
+                    onClick={() =>
+                        navigate("/support/household-assistance", {
+                            animate: true,
+                        })
+                    }
+                />
+                <SupportRow
                     title="Báo lỗi"
                     description="Báo cho chúng tôi lỗi bạn gặp phải khi sử dụng ứng dụng"
                     onClick={() =>

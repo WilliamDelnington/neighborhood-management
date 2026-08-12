@@ -78,8 +78,15 @@ export const updateComplaint = (
 
 // Nguoi gui tu xac nhan hai long voi ket qua xu ly - chi goi duoc khi trang
 // thai dang la "da_xu_ly".
-export const confirmComplaintResolution = (id: string): Promise<Complaint> =>
-    request<Complaint>("POST", `${API.COMPLAINTS}/${id}/confirm-resolution`);
+export const confirmComplaintResolution = (
+    id: string,
+    rating?: number,
+    ratingNote?: string,
+): Promise<Complaint> =>
+    request<Complaint>("POST", `${API.COMPLAINTS}/${id}/confirm-resolution`, {
+        rating,
+        ratingNote,
+    });
 
 // Nguoi gui de nghi xem xet lai - gioi han 1 lan/phan anh, chi goi duoc khi
 // trang thai dang la "da_xu_ly" (xem requestComplaintReevaluation o backend).

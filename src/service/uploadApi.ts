@@ -6,7 +6,8 @@ export type AttachmentRelatedModel =
     | "HouseRecord"
     | "Business"
     | "BusinessDocument"
-    | "Complaint";
+    | "Complaint"
+    | "Request";
 
 /**
  * Cap mot token upload ngan han (10 phut), gan chet vao dung mot ban ghi

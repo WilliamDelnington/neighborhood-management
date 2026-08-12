@@ -36,18 +36,29 @@ const AnnouncementListView: React.FC = () => {
             )}
             {!loading && !error && (
                 <Box px={4}>
-                    {items.map(item => (
-                        <ListRow
-                            key={item._id}
-                            title={`${item.pinned ? "📌 " : ""}${item.title}`}
-                            subtitle={LOAI_THONG_BAO_LABEL[item.category]}
-                            onClick={() =>
-                                navigate(`/announcements/${item._id}`, {
-                                    animate: true,
-                                })
-                            }
-                        />
-                    ))}
+                    {items.map(item => {
+                        const source =
+                            item.neighborhoodId &&
+                            typeof item.neighborhoodId !== "string"
+                                ? `Tổ dân phố ${item.neighborhoodId.name}`
+                                : "Phường";
+                        return (
+                            <ListRow
+                                key={item._id}
+                                title={`${item.isUrgent ? "🔴 " : ""}${
+                                    item.pinned ? "📌 " : ""
+                                }${item.title}`}
+                                subtitle={`${
+                                    LOAI_THONG_BAO_LABEL[item.category]
+                                } · ${source}`}
+                                onClick={() =>
+                                    navigate(`/announcements/${item._id}`, {
+                                        animate: true,
+                                    })
+                                }
+                            />
+                        );
+                    })}
                 </Box>
             )}
         </Box>

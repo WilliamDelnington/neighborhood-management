@@ -24,6 +24,7 @@ const RELATED_MODEL_PATH: Record<string, string> = {
     Survey: "/surveys",
     HouseRecord: "/admin/houses",
     Correspondence: "/correspondences",
+    InspectionTarget: "/inspections/self-declarations",
 };
 
 /**

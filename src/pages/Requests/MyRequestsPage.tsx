@@ -9,6 +9,7 @@ import {
     StatusBadge,
 } from "@components/admin";
 import { RequireAuth } from "@components/role";
+import AttachmentUploader from "@components/attachments/AttachmentUploader";
 import {
     REQUEST_PRIORITY_LABEL,
     REQUEST_STATUS_LABEL,
@@ -17,7 +18,9 @@ import {
 } from "@constants/domain";
 import {
     createRequestComment,
+    deleteRequestAttachment,
     fetchMyRequests,
+    fetchRequestAttachments,
     fetchRequestComments,
     updateMyRequestStatus,
 } from "@service/taskRequestApi";
@@ -236,6 +239,15 @@ const MyRequestsContent: React.FC = () => {
                                         Ghi chú: {item.note}
                                     </Text>
                                 )}
+
+                                <AttachmentUploader
+                                    relatedModel="Request"
+                                    relatedId={item.requestId}
+                                    canUpload={item.status !== "resolved"}
+                                    canDelete={false}
+                                    fetchAttachments={fetchRequestAttachments}
+                                    deleteAttachmentFn={deleteRequestAttachment}
+                                />
 
                                 {infoNoteFor === item._id ? (
                                     <Box mt={3}>
